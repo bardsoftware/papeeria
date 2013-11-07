@@ -5,6 +5,9 @@ from pysqlite2 import dbapi2 as sqlite
 
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
+
+
+
 class crawler:
 
   def __init__(self, dbname):
@@ -42,13 +45,13 @@ class crawler:
       return res[0]
 
 
-  def gettextonly(self, soup):
+  def get_text_only(self, soup):
     v = soup.string
     if v == None:
       c = soup.contents
       resulttext = ''
       for t in c:
-        sudtext = self.gettextonly(t)
+        sudtext = self.get_text_only(t)
         resulttext += sudtext + '\n'
       return resulttext
     else:
@@ -60,13 +63,11 @@ class crawler:
     return [s.lower() for s in splitter.split(text) if s != '']
  
 
-  def addtoindex(self, url, soup):
+  def addtoindex(self, url, text):
     if self.isindexed(url): return
     print 'Indexing %s' % url
     
-    text = self.gettextonly(soup)
     words = self.separatewords(text)
-    
     urlid = self.getentryid('urllist', 'url', url)
     
     for i in range(len(words)):
@@ -76,32 +77,86 @@ class crawler:
       self.con.execute("insert into wordlocation(urlid, wordid, location) values (%d, %d, %d)" % (urlid, wordid, i))     
 
 
-  def crawl(self, pages, depth = 2):
-    for i in range(depth):
-      newpages = set( )
-      for page in pages:
-        try:
-          c = urllib2.urlopen(page)
-        except:
-          print "I can't open %s" % page
-          continue
-        soup = BeautifulSoup(c.read( ))
-        self.addtoindex(page, soup)
-        
-        links = soup('a')
-        for link in links:
-          if ('href' in dict(link.attrs)):
-            url = urljoin(page, link['href'])
-            if url.find("'") != -1: continue
-            url = url.split('#')[0]
-            if url[0:4] == 'http' and not self.isindexed(url):
-              newpages.add(url)
-            linkText = self.gettextonly(link)
-            # print linkText
-            self.addlinkref(page, url, linkText)
+  def open_tab(self, url, tab_name):
+    #tab_name = "tab_about"
+    req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"})
+    try: 
+      con = urllib2.urlopen(req)
+    except:
+      print "I can't open %s" % url
+      return
+    soup = BeautifulSoup(con.read())
+    scripts = soup.findAll("script")
+    m = re.compile("'bindExpr\\\\':\[\\\\'[^']*\\\\'\]")
+    for tag in scripts:
+      if (len(tag.contents) > 0): 
+        script_content = str(tag.contents)
+        #print script_content
+        #print "======another string========\n"
+        matches = m.finditer(script_content)
+        for expr in matches:
+          expr_str = expr.group(0)
+          #print expr_str
+          if tab_name in expr_str:
+            begin_ind = expr_str.find(tab_name)
+            #print expr_str
+            link = expr_str[begin_ind:(len(expr_str) - 3)]
+            link = link.replace(";", "")
+            #print link
+            return link
 
-        self.dbcommit()  
-      pages = newpages 
+
+  def get_list_of_links(self, url):
+    req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"}) 
+    try: 
+      con = urllib2.urlopen(req)
+    except:
+      print "I can't open %s" % url
+      return
+    soup = BeautifulSoup(con.read())
+    links = soup('a')
+    return links
+
+
+  def get_abstract_text(self, url):
+    req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"}) 
+    try: 
+      con = urllib2.urlopen(req)
+    except:
+      print "I can't open %s" % url
+      return
+    soup = BeautifulSoup(con.read())
+    text = self.get_text_only(soup)
+    #print text
+    return text
+    
+
+  def crawl(self, journal_url, depth = 2):
+    base = "http://dl.acm.org/"
+    link = self.open_tab(journal_url, "pub_series")
+    if link == None:
+      return
+    #print link
+    archive_url = base + link
+    #print archive_url
+    links = self.get_list_of_links(archive_url)
+    if links == None:
+      return
+
+    for link in links:
+      print "Link of Journal: " + base + link['href']
+      list_vol = self.open_tab(base + link['href'], "tab_about")
+      #print "Getting list: " + base + list_vol
+      list_of_papers = self.get_list_of_links(base + list_vol)
+      for paper in list_of_papers:
+        if (len(dict(paper.attrs)) == 1):
+          #print "Paper: " + base + paper['href']
+          paper_abstract = self.open_tab(base + paper['href'], "tab_abstract")
+          text = self.get_abstract_text(base + paper_abstract)
+          self.addtoindex(base + paper['href'], text)
+          #print "====== TEXT ======"
+          #print text
+    
 
 
   def createindextables(self):
