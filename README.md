@@ -5,16 +5,11 @@ Papeeria is an IDE for your computer science papers
 
 Article search system for Papeeria
 
-
-Very simple example from Toby Segaran's book.  
-Class crawler creates search index for pages from http://segaran.com/wiki/
-
+Class crawler creates index database for all articles' abstracts from the ACM Computing Surveys (CSUR) journal.
 Create search index database:
 
 \>>> import search  
 \>>> c = search.crawler('searchindex.db')  
-\>>> c.createindextables()  
-\>>> list = ['http://segaran.com/wiki/Categorical_list_of_programming_languages.html']  
-\>>> c.crawl(list)  
+\>>> c.createindextables()    
+\>>> c.crawl("http://dl.acm.org/pub.cfm?id=J204&CFID=376498762&CFTOKEN=48845412")  
   
-The result database is available: http://segaran.com/db/searchindex.db
