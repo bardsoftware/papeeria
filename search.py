@@ -31,12 +31,10 @@ class Crawler:
         """ Check if url is already exist in database.
         That means this page is already indexed"""
         u = self.con.execute(
-            "select rowid from url_list where url = '%s'" % url).fetchone()
+            "select * from word_location join url_list on "
+            "url_list.rowid = word_location.url_id where url = '%s'" % url).fetchone()
         if u is not None:
-            v = self.con.execute(
-                "select * from word_location where url_id = '%d'" % u[0]).fetchone()
-            if v is not None:
-                return True
+            return True
         return False
 
     def add_link_ref(self, url_from, url_to, link_text):
@@ -85,8 +83,10 @@ class Crawler:
 
         for i in range(len(words)):
             word = words[i]
-            if word in ignore_words: continue
+            if word in ignore_words:
+                continue
             word_id = self.get_entry_id('word_list', 'word', word)
+            #print word_id
             self.con.execute(
                 "insert into word_location(url_id, word_id, location) values (%d, %d, %d)" % (url_id, word_id, i))
 
@@ -164,6 +164,7 @@ class Crawler:
                     paper_abstract = self.open_tab(base + paper['href'], "tab_abstract")
                     text = self.get_abstract_text(base + paper_abstract)
                     self.add_to_index(base + paper['href'], text)
+                    self.db_commit()
 
     def create_index_tables(self):
         """ Create database tables """
