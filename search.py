@@ -159,15 +159,29 @@ class Crawler:
             print "Journal link: " + base + link['href']
             list_vol = self.open_tab(base + link['href'], "tab_about")
             list_of_papers = self.get_list_of_links(base + list_vol)
+            prefix = "citation"
             for paper in list_of_papers:
-                if len(dict(paper.attrs)) == 1:
+                if (len(dict(paper.attrs)) == 1) and (paper['href'].startswith(prefix)):
                     paper_abstract = self.open_tab(base + paper['href'], "tab_abstract")
+                    if paper_abstract is None:
+                        print "I can't get paper's abstract: " + base + paper['href']
+                        continue
                     text = self.get_abstract_text(base + paper_abstract)
                     self.add_to_index(base + paper['href'], text)
                     self.db_commit()
 
     def create_index_tables(self):
         """ Create database tables """
+        res = self.con.execute('select name from sqlite_master where type="table" and name="url_list"').fetchone()
+        if res is not None:
+            self.con.execute('delete from url_list')
+            self.con.execute('delete from word_list')
+            self.con.execute('delete from word_location')
+            self.con.execute('delete from link')
+            self.con.execute('delete from link_words')
+            self.db_commit()
+            return
+
         self.con.execute('create table url_list(url)')
         self.con.execute('create table word_list(word)')
         self.con.execute('create table word_location(url_id, word_id, location)')
