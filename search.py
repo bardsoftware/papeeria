@@ -23,6 +23,7 @@ class Crawler:
     ARCHIVE_TAB_NAME = "pub_series"
     BASE = "http://dl.acm.org/"
     IS_PAPER_LINK = "citation"
+    ABS_NOT_AVAILABLE = "An abstract is not available."
 
     def __init__(self, db_name):
         self.con = sqlite.connect(db_name)
@@ -85,8 +86,8 @@ class Crawler:
         print '%4d Indexing %s' % (count, url)
 
         words = self.separate_words(title)
-        if (len(text) < 50) and ("An abstract is not available." in text):
-            print "An abstract is not available."
+        if (len(text) < 50) and (self.ABS_NOT_AVAILABLE in text):
+            print self.ABS_NOT_AVAILABLE
         else:
             words_from_abstract = self.separate_words(text)
             for word in words_from_abstract:
@@ -167,6 +168,12 @@ class Crawler:
         text = self.get_text_only(soup)
         return text
 
+    def delete_user_info(self, url):
+        """Delete user info from url"""
+        ind = url.find('&')
+        new_url = url[0: ind]
+        return new_url
+
     def crawl(self, journal_url, depth=2):
         """ Begin crawling journal in ACM Library """
 
@@ -180,19 +187,23 @@ class Crawler:
 
         count = 1
         for link in links:
+            ref = self.delete_user_info(link['href'])
             print "=============="
-            print " Journal link: " + self.BASE + link['href']
+            print " Journal link: " + self.BASE + ref
             print "=============="
-            list_vol = self.open_tab(self.BASE + link['href'], self.TABLE_OF_CONTENTS_TAB_NAME)
+            list_vol = self.open_tab(self.BASE + ref, self.TABLE_OF_CONTENTS_TAB_NAME)
             list_of_papers = self.get_list_of_links(self.BASE + list_vol)
 
             for paper in list_of_papers:
-                if (len(dict(paper.attrs)) == 1) and (paper['href'].startswith(self.IS_PAPER_LINK)):
-                    paper_abstract = self.open_tab(self.BASE + paper['href'], self.ABSTRACT_TAB_NAME)
+                paper_ref = self.delete_user_info(paper['href'])
+                if (len(dict(paper.attrs)) == 1) and (paper_ref.startswith(self.IS_PAPER_LINK)):
+                    paper_abstract = self.open_tab(self.BASE + paper_ref, self.ABSTRACT_TAB_NAME)
+                    if paper_abstract is None:
+                        continue
                     text = self.get_abstract_text(self.BASE + paper_abstract)
-                    title = self.get_title(self.BASE + paper['href'])
+                    title = self.get_title(self.BASE + paper_ref)
 
-                    self.add_to_index(self.BASE + paper['href'], text, title, count)
+                    self.add_to_index(self.BASE + paper_ref, text, title, count)
                     count += 1
                     self.db_commit()
 
