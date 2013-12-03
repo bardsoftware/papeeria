@@ -71,14 +71,21 @@ class Crawler:
         splitter = re.compile('\\W*')
         return [s.lower() for s in splitter.split(text) if s != '']
 
-    def add_to_index(self, url, text):
+    def add_to_index(self, url, text, title, count):
         """ Add all words from text (from url) to database.
         This url becomes indexed """
         if self.is_indexed(url):
             return
-        print 'Indexing %s' % url
+        print '%4d Indexing %s' % (count, url)
 
-        words = self.separate_words(text)
+        words = self.separate_words(title)
+        if (len(text) < 50) and ("An abstract is not available." in text):
+            print "An abstract is not available."
+        else:
+            words_from_abstract = self.separate_words(text)
+            for word in words_from_abstract:
+                words.append(word)
+
         url_id = self.get_entry_id('url_list', 'url', url)
 
         for i in range(len(words)):
@@ -131,6 +138,17 @@ class Crawler:
         links = soup('a')
         return links
 
+    def get_title(self, url):
+        req = urllib2.Request(url, headers={'User-Agent': "Magic Browser"})
+        try:
+            con = urllib2.urlopen(req)
+        except:
+            print "I can't open %s" % url
+            return
+        soup = BeautifulSoup(con.read())
+        title = soup.title.string
+        return title
+
     def get_abstract_text(self, url):
         """ Return text of article's abstract"""
         req = urllib2.Request(url, headers={'User-Agent': "Magic Browser"})
@@ -141,7 +159,6 @@ class Crawler:
             return
         soup = BeautifulSoup(con.read())
         text = self.get_text_only(soup)
-        #print text
         return text
 
     def crawl(self, journal_url, depth=2):
@@ -155,20 +172,25 @@ class Crawler:
         if links is None:
             return
 
+        count = 1
         for link in links:
+            print "=============="
             print "Journal link: " + base + link['href']
+            print "=============="
             list_vol = self.open_tab(base + link['href'], "tab_about")
             list_of_papers = self.get_list_of_links(base + list_vol)
             prefix = "citation"
             for paper in list_of_papers:
                 if (len(dict(paper.attrs)) == 1) and (paper['href'].startswith(prefix)):
                     paper_abstract = self.open_tab(base + paper['href'], "tab_abstract")
-                    if paper_abstract is None:
-                        print "I can't get paper's abstract: " + base + paper['href']
-                        continue
                     text = self.get_abstract_text(base + paper_abstract)
-                    self.add_to_index(base + paper['href'], text)
+                    title = self.get_title(base + paper['href'])
+
+                    self.add_to_index(base + paper['href'], text, title, count)
+                    count += 1
                     self.db_commit()
+
+        print "%4d papers were indexed" % count
 
     def create_index_tables(self):
         """ Create database tables """
