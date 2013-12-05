@@ -85,7 +85,15 @@ class Crawler:
             return
         print '%4d Indexing %s' % (count, url)
 
-        words = self.separate_words(title)
+        if (title is None) and (text is None):
+            print "Neither text nor title are available"
+            return
+
+        words = []
+        if title is not None:
+            #print title
+            words = self.separate_words(title)
+
         if (len(text) < 50) and (self.ABS_NOT_AVAILABLE in text):
             print self.ABS_NOT_AVAILABLE
         else:
@@ -150,7 +158,7 @@ class Crawler:
         try:
             con = urllib2.urlopen(req)
         except:
-            print "I can't open %s" % url
+            print "I can't get title of: %s" % url
             return
         soup = BeautifulSoup(con.read())
         title = soup.title.string
@@ -162,7 +170,7 @@ class Crawler:
         try:
             con = urllib2.urlopen(req)
         except:
-            print "I can't open %s" % url
+            print "I can't open abstract: %s" % url
             return
         soup = BeautifulSoup(con.read())
         text = self.get_text_only(soup)
