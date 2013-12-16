@@ -14,7 +14,6 @@ import urllib2
 from BeautifulSoup import *
 from pysqlite2 import dbapi2 as sqlite
 
-ignore_words = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
 
 class Crawler:
@@ -105,8 +104,6 @@ class Crawler:
 
         for i in range(len(words)):
             word = words[i]
-            if word in ignore_words:
-                continue
             word_id = self.get_entry_id('word_list', 'word', word)
             #print word_id
             self.con.execute(
@@ -231,7 +228,7 @@ class Crawler:
             return
 
         self.con.execute('create table url_list(url)')
-        self.con.execute('create table word_list(word)')
+        self.con.execute('create table word_list(word, idf)')
         self.con.execute('create table word_location(url_id, word_id, location)')
         self.con.execute('create table link(from_id integer, to_id integer)')
         self.con.execute('create table link_words(word_id, link_id)')
