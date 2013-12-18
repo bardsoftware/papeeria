@@ -46,21 +46,6 @@ class Searcher:
         else:
             return sorted_top[0: n]
 
-    def count_idf(self):
-        print "Counting idf..."
-        url_count = self.con.execute("select count(rowid) from url_list").fetchone()[0]
-        words_count = self.con.execute("select count(rowid) from word_list").fetchone()[0]
-        max = 0
-        for word_id in range(1, words_count + 1):
-            urls = self.con.execute("select distinct url_id from word_location "
-                                        "where word_id = %s" % word_id).fetchall()
-            num = len(urls)
-            if num > max:
-                   max = num
-            idf = math.log10(url_count / num)
-            self.con.execute("update word_list set idf = %f where rowid = %d" % (idf, word_id))
-        self.db_commit()
-
 
     def tf(self, words):
         '''Return top n words in text'''
