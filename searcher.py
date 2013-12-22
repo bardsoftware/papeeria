@@ -13,8 +13,8 @@
 from BeautifulSoup import *
 from pysqlite2 import dbapi2 as sqlite
 import operator
-import search
 import math
+import heapq
 
 class Searcher:
     SHOW_ANSWER = 10
@@ -48,7 +48,7 @@ class Searcher:
 
 
     def tf(self, words):
-        '''Return top n words in text'''
+        '''Return sorted words'''
         words_top = {word: 0 for word in words}
         for word in words:
             words_top[word] += 1
@@ -74,51 +74,10 @@ class Searcher:
             return sorted_top[0: n]
 
 
-    def find_rows(self, words):
-        '''Find documents which contain _all_ words'''
-        word_id_list = []
-        table_num = 0
-        field_list = 'w0.url_id'
-        table_list = ''
-        clause_list = ''
-
-        for word in words:
-            word_row = self.con.execute(
-                "select rowid from word_list where word = '%s'" % word).fetchone()
-            if word_row is not None:
-                word_id = word_row[0]
-                #print "word_id: %d" % word_id
-                word_id_list.append(word_id)
-                if table_num > 0:
-                    table_list += ', '
-                    clause_list += ' and '
-                    clause_list += 'w%d.url_id = w%d.url_id and ' % (table_num - 1, table_num)
-                #field_list += ', w%d.location' % table_num
-                table_list += 'word_location w%d' % table_num
-                clause_list += 'w%d.word_id = %d' % (table_num, word_id)
-                table_num += 1
-
-        query = 'select distinct %s from %s where %s ' % (field_list, table_list, clause_list)
-        result = self.con.execute(query)
-        rows = [row for row in result]
-        return rows
-
     def get_url_by_id(self, url_id):
         '''Return url by its id'''
         url = self.con.execute("select url from url_list where rowid = '%s'" % url_id).fetchone()[0]
         return url
-
-    def top_search(self, text, n):
-        '''Start search by n top words in text
-        top is counted by number of repeats'''
-        words_pairs = self.get_top_words(self.separate_words(text), n)
-        words = [pair[0] for pair in words_pairs]
-        url_id_list = self.find_rows(words)
-        for url_id in url_id_list:
-            print self.get_url_by_id(url_id)
-
-        if len(url_id_list) == 0:
-            print "I can't find anything. Sorry... :("
 
 
     def cos_distance(self, url_id, words):
