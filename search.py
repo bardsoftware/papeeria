@@ -213,22 +213,42 @@ class Crawler:
                     count += 1
                     self.db_commit()
 
-        print "%4d papers were indexed" % count
+        print "%4d papers were indexed" % (count - 1)
 
 
     def count_idf(self):
+        '''Count idf for each word
+        Set this value to the table word_list'''
         print "Counting idf..."
         url_count = self.con.execute("select count(rowid) from url_list").fetchone()[0]
-        words_count = self.con.execute("select count(rowid) from word_list").fetchone()[0]
-        max = 0
-        for word_id in range(1, words_count + 1):
-            urls = self.con.execute("select distinct url_id from word_location "
-                                        "where word_id = %s" % word_id).fetchall()
-            num = len(urls)
-            if num > max:
-                   max = num
+        words_urls = self.con.execute("select word_id, count(distinct url_id) from word_location "
+                         "group by word_id").fetchall()
+
+        for pair in words_urls:
+            word_id = pair[0]
+            num = pair[1]
             idf = math.log10(url_count / num)
             self.con.execute("update word_list set idf = %f where rowid = %d" % (idf, word_id))
+        self.db_commit()
+
+
+    def count_vectors_length(self):
+        '''Count vector's length for each url
+        Set this value to the table url_list'''
+        print "Counting lengths..."
+        url_ids = self.con.execute("select rowid from url_list").fetchall()
+        url_ids = (url_id[0] for url_id in url_ids)
+
+        for url_id in url_ids:
+            words_count = self.con.execute("select word_id, count(word_id) from word_location where "
+                                               " url_id = %d group by word_id" % url_id).fetchall()
+            words_dict = {pair[0]: pair[1] for pair in words_count}
+            length = 0
+            for word in words_dict:
+                length = length + words_dict[word] * words_dict[word]
+            length = math.sqrt(length)
+            self.con.execute("update url_list set length = %f where rowid = %d" % (length, url_id))
+
         self.db_commit()
 
 
@@ -244,7 +264,7 @@ class Crawler:
             self.db_commit()
             return
 
-        self.con.execute('create table url_list(url)')
+        self.con.execute('create table url_list(url, length)')
         self.con.execute('create table word_list(word, idf)')
         self.con.execute('create table word_location(url_id, word_id, location)')
         self.con.execute('create table link(from_id integer, to_id integer)')
