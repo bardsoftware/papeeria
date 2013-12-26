@@ -233,20 +233,25 @@ class Crawler:
 
 
     def count_vectors_length(self):
-        '''Count vector's length for each url
+        '''Count vector's length for each url (Euclidean norm of tf * idf for each word in url)
         Set this value to the table url_list'''
         print "Counting lengths..."
         url_ids = self.con.execute("select rowid from url_list").fetchall()
         url_ids = (url_id[0] for url_id in url_ids)
 
         for url_id in url_ids:
-            words_count = self.con.execute("select word_id, count(word_id) from word_location where "
-                                               " url_id = %d group by word_id" % url_id).fetchall()
-            words_dict = {pair[0]: pair[1] for pair in words_count}
+            words_count = self.con.execute("select word_id, count(word_id), idf from word_location join "
+                                           " word_list on word_location.word_id = word_list.rowid where "
+                                           " url_id = %d group by word_id" % url_id).fetchall()
+            words_dict = {record[0]: record[1] for record in words_count}
+            words_idf = {record[0]: record[2] for record in words_count}
+            sum_of_words = sum(words_dict[word] for word in words_dict)
+
             length = 0
             for word in words_dict:
-                length = length + words_dict[word] * words_dict[word]
+                length += pow(words_dict[word] * words_idf[word], 2)
             length = math.sqrt(length)
+            length = length / sum_of_words
             self.con.execute("update url_list set length = %f where rowid = %d" % (length, url_id))
 
         self.db_commit()

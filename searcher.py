@@ -28,12 +28,15 @@ class Searcher:
     def db_commit(self):
         self.con.commit()
 
-    def separate_words(self, text):
+    @staticmethod
+    def separate_words(text):
         splitter = re.compile('\\W*')
         return [s.lower() for s in splitter.split(text) if s != '']
 
-    def get_top_words(self, words, n):
-        '''Return top n words in text'''
+    @staticmethod
+    def get_top_words(words, n):
+        '''Return top n words in text
+        Return list of pairs (word, num of repetition)'''
         words_top = {word: 0 for word in words}
         for word in words:
             words_top[word] += 1
@@ -44,7 +47,8 @@ class Searcher:
         else:
             return sorted_top[0: n]
 
-    def get_top_n_from_dict(self, dic, n):
+    @staticmethod
+    def get_top_n_from_dict(dic, n):
         '''Return list of pairs (key, value)
         sorted top n values from dictionary dic '''
         heap = []
@@ -68,16 +72,23 @@ class Searcher:
         sorted_top = sorted(words_top.iteritems(), key=operator.itemgetter(1), reverse=True)
         return sorted_top
 
+    def idf(self, word):
+        '''Return idf of word'''
+        idf = self.con.execute("select idf from word_list where word = '%s'" % word).fetchone()
+        if idf is None:
+            return 0
+        else:
+            return idf[0]
 
     def get_top_tf_idf(self, words, n):
         '''Get top n words from list words using tf * idf'''
         tf_list = self.tf(words)
         top_dict = {pair[0]: pair[1] for pair in tf_list}
         for word in top_dict:
-            idf = self.con.execute("select idf from word_list where word = '%s'" % word).fetchone()[0]
+            idf = self.idf(word)
             top_dict[word] = top_dict[word] * idf
 
-        sorted_top = self.get_top_n_from_dict(top_dict, n)
+        sorted_top = Searcher.get_top_n_from_dict(top_dict, n)
         return sorted_top
 
 
@@ -86,8 +97,9 @@ class Searcher:
         url = self.con.execute("select url from url_list where rowid = '%s'" % url_id).fetchone()[0]
         return url
 
-    def count_length(self, l):
-        '''Return length of the vector saved in list of pairs'''
+    @staticmethod
+    def count_length(l):
+        '''Return Euclidean norm of the vector, saved in list of pairs'''
         words_dict = {pair[0]: pair[1] for pair in l}
         length = 0
         for word in words_dict:
@@ -96,51 +108,54 @@ class Searcher:
         length = math.sqrt(length)
         return length
 
-    def cos_distance(self, url_id, words_tf_idf, length):
-        '''Count cos distance between list of pairs (word, tf * idf)
-        and article with id url = url_id
-        length is a length of vector, it doesn't affect the order of documents, but it makes
-        cos values between 0 and 1'''
-
-        url_words = self.con.execute("select word from word_list join word_location on "
-                                     "word_list.rowid = word_location.word_id where "
-                                     "word_location.url_id = %s" % url_id).fetchall()
-
-        url_words = [pair[0] for pair in url_words]
-        url_words_counted = self.get_top_words(url_words, len(url_words))
+    @staticmethod
+    def cos_distance(url_words_tf_idf, url_words_length, words_tf_idf, words_length):
+        ''' Count cos distance between two vectors of words
+        url_words_tf_idf - list of pairs (word, tf * idf), where words are words from url
+        url_words_length - norm of vector url_words_tf_idf
+        words_tf_idf     - list of pairs (word, tf * idf), where words are words from text
+        words_length     - norm of vector words_tf_idf '''
 
         words_dict = {pair[0]: pair[1] for pair in words_tf_idf}
-        url_words_dict = {pair[0]: pair[1] for pair in url_words_counted}
+        url_words_dict = {pair[0]: pair[1] for pair in url_words_tf_idf}
 
-        sum = 0
+        sc_product = 0
         for word in words_dict:
             if word in url_words_dict:
-                sum = sum + words_dict[word] * url_words_dict[word]
+                sc_product += words_dict[word] * url_words_dict[word]
 
-        url_length = self.con.execute("select length from url_list where rowid = %d" % url_id).fetchone()[0]
-        cos = sum / (url_length * length)
-        return cos
+        return sc_product / (url_words_length * words_length)
 
 
     def cos_search(self, text, n):
-        ''' Start search by cos distance between text and documents
+        ''' Start search by cos distance between text and documents(urls)
         n means taking n top words from the text
-        top is counted by (number of repeats) * (idf) '''
+        top is counted by (tf * idf) '''
 
-        all_words = self.separate_words(text)
-        words_top_tf_idf = self.get_top_tf_idf(all_words, n)
-        print words_top_tf_idf
-        length = self.count_length(words_top_tf_idf)
-        #list of pairs
+        text_words = Searcher.separate_words(text)
+        text_words_tf_idf = self.get_top_tf_idf(text_words, n)
+        text_length = Searcher.count_length(text_words_tf_idf)
 
         url_ids = self.con.execute("select rowid from url_list").fetchall()
         url_ids = [url_id[0] for url_id in url_ids]
+
         url_count = len(url_ids)
         print "Number of documents is %d" % url_count
         print "Searching..."
 
-        url_cos = {url_id: self.cos_distance(url_id, words_top_tf_idf, length) for url_id in url_ids}
-        top_n = self.get_top_n_from_dict(url_cos, self.SHOW_ANSWER)
+        url_cos = {}
+        for url_id in url_ids:
+            url_words = self.con.execute("select word from word_list join word_location on "
+                                         " word_list.rowid = word_location.word_id where "
+                                         " word_location.url_id = %s" % url_id).fetchall()
+
+            url_words = [pair[0] for pair in url_words]
+            url_words_tf_idf = self.get_top_tf_idf(url_words, len(url_words))
+            url_length = self.con.execute("select length from url_list where rowid = %d" % url_id).fetchone()[0]
+
+            url_cos[url_id] = Searcher.cos_distance(url_words_tf_idf, url_length, text_words_tf_idf, text_length)
+
+        top_n = Searcher.get_top_n_from_dict(url_cos, self.SHOW_ANSWER)
 
         print "Answer: "
         for url_id in top_n:
