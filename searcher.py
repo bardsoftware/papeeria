@@ -124,6 +124,9 @@ class Searcher:
             if word in url_words_dict:
                 sc_product += words_dict[word] * url_words_dict[word]
 
+        if url_words_length == 0 or words_length == 0:
+            return 0
+        
         return sc_product / (url_words_length * words_length)
 
 
