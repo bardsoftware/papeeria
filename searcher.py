@@ -47,30 +47,15 @@ class Searcher:
         else:
             return sorted_top[0: n]
 
-    @staticmethod
-    def get_top_n_from_dict(dic, n):
-        '''Return list of pairs (key, value)
-        sorted top n values from dictionary dic '''
-        heap = []
-        for word in dic:
-            if len(heap) < n:
-                heapq.heappush(heap, (dic[word], word))
-            else:
-                heapq.heappushpop(heap, (dic[word], word))
-        heap.sort(reverse=True)
-        inverted = [(pair[1], pair[0]) for pair in heap]
-        return inverted
-
 
     def tf(self, words):
-        '''Return words sorted by their tf'''
+        '''Return tf of words'''
         words_top = {word: 0 for word in words}
         for word in words:
             words_top[word] += 1
-        words_top = {word: words_top[word] / float(len(words)) for word in words_top}
+        words_freq = {word: words_top[word] / float(len(words)) for word in words_top}
 
-        sorted_top = sorted(words_top.iteritems(), key=operator.itemgetter(1), reverse=True)
-        return sorted_top
+        return words_freq
 
     def idf(self, word):
         '''Return idf of word'''
@@ -82,14 +67,20 @@ class Searcher:
 
     def get_top_tf_idf(self, words, n):
         '''Get top n words from list words using tf * idf'''
-        tf_list = self.tf(words)
-        top_dict = {pair[0]: pair[1] for pair in tf_list}
-        for word in top_dict:
-            idf = self.idf(word)
-            top_dict[word] = top_dict[word] * idf
+        tf_dict = self.tf(words)
+        heap = []
 
-        sorted_top = Searcher.get_top_n_from_dict(top_dict, n)
-        return sorted_top
+        for word in tf_dict:
+            idf = self.idf(word)
+            tf_idf = tf_dict[word] * idf
+            if len(heap) < n:
+                heapq.heappush(heap, (tf_idf, word))
+            else:
+                heapq.heappushpop(heap, (tf_idf, word))
+
+        heap.sort(reverse=True)
+        inverted = [(pair[1], pair[0]) for pair in heap]
+        return inverted
 
 
     def get_url_by_id(self, url_id):
@@ -116,6 +107,9 @@ class Searcher:
         words_tf_idf     - list of pairs (word, tf * idf), where words are words from text
         words_length     - norm of vector words_tf_idf '''
 
+        if url_words_length == 0 or words_length == 0:
+            return 0
+
         words_dict = {pair[0]: pair[1] for pair in words_tf_idf}
         url_words_dict = {pair[0]: pair[1] for pair in url_words_tf_idf}
 
@@ -124,9 +118,6 @@ class Searcher:
             if word in url_words_dict:
                 sc_product += words_dict[word] * url_words_dict[word]
 
-        if url_words_length == 0 or words_length == 0:
-            return 0
-        
         return sc_product / (url_words_length * words_length)
 
 
@@ -146,7 +137,7 @@ class Searcher:
         print "Number of documents is %d" % url_count
         print "Searching..."
 
-        url_cos = {}
+        heap = []
         for url_id in url_ids:
             url_words = self.con.execute("select word from word_list join word_location on "
                                          " word_list.rowid = word_location.word_id where "
@@ -155,10 +146,15 @@ class Searcher:
             url_words = [pair[0] for pair in url_words]
             url_words_tf_idf = self.get_top_tf_idf(url_words, len(url_words))
             url_length = self.con.execute("select length from url_list where rowid = %d" % url_id).fetchone()[0]
+            url_cos = Searcher.cos_distance(url_words_tf_idf, url_length, text_words_tf_idf, text_length)
 
-            url_cos[url_id] = Searcher.cos_distance(url_words_tf_idf, url_length, text_words_tf_idf, text_length)
+            if len(heap) < self.SHOW_ANSWER:
+                heapq.heappush(heap, (url_cos, url_id))
+            else:
+                heapq.heappushpop(heap, (url_cos, url_id))
 
-        top_n = Searcher.get_top_n_from_dict(url_cos, self.SHOW_ANSWER)
+        heap.sort(reverse=True)
+        top_n = [(pair[1], pair[0]) for pair in heap]
 
         print "Answer: "
         for url_id in top_n:

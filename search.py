@@ -193,6 +193,9 @@ class Crawler:
 
         count = 1
         for link in links:
+            #DEBUG
+            if count > 5:
+                break
             ref = self.delete_user_info(link['href'])
             print "=============="
             print " Journal link: " + self.BASE + ref
@@ -201,6 +204,9 @@ class Crawler:
             list_of_papers = self.get_list_of_links(self.BASE + list_vol)
 
             for paper in list_of_papers:
+                #DEBUG
+                if count > 5:
+                    break
                 paper_ref = self.delete_user_info(paper['href'])
                 if (len(dict(paper.attrs)) == 1) and (paper_ref.startswith(self.IS_PAPER_LINK)):
                     paper_abstract = self.open_tab(self.BASE + paper_ref, self.ABSTRACT_TAB_NAME)
