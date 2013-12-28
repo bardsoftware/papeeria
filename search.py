@@ -194,8 +194,8 @@ class Crawler:
         count = 1
         for link in links:
             #DEBUG
-            if count > 5:
-                break
+            #if count > 5:
+            #    break
             ref = self.delete_user_info(link['href'])
             print "=============="
             print " Journal link: " + self.BASE + ref
@@ -205,8 +205,8 @@ class Crawler:
 
             for paper in list_of_papers:
                 #DEBUG
-                if count > 5:
-                    break
+                #if count > 5:
+                #    break
                 paper_ref = self.delete_user_info(paper['href'])
                 if (len(dict(paper.attrs)) == 1) and (paper_ref.startswith(self.IS_PAPER_LINK)):
                     paper_abstract = self.open_tab(self.BASE + paper_ref, self.ABSTRACT_TAB_NAME)
@@ -242,23 +242,18 @@ class Crawler:
         '''Count vector's length for each url (Euclidean norm of tf * idf for each word in url)
         Set this value to the table url_list'''
         print "Counting lengths..."
-        url_ids = self.con.execute("select rowid from url_list").fetchall()
-        url_ids = (url_id[0] for url_id in url_ids)
 
-        for url_id in url_ids:
-            words_count = self.con.execute("select word_id, count(word_id), idf from word_location join "
-                                           " word_list on word_location.word_id = word_list.rowid where "
-                                           " url_id = %d group by word_id" % url_id).fetchall()
-            words_dict = {record[0]: record[1] for record in words_count}
-            words_idf = {record[0]: record[2] for record in words_count}
-            sum_of_words = sum(words_dict[word] for word in words_dict)
+        url_count = self.con.execute("select url_id, sum(wcount), sum(count_idf) from "
+                                     "(select url_id, count(location) as wcount, "
+                                     "count(location) * count(location) * word_list.idf * word_list.idf as count_idf "
+                                     "from word_location join word_list on word_location.word_id=word_list.rowid  "
+                                     "group by url_id, word_id) T1  "
+                                     "group by T1.url_id").fetchall()
 
-            length = 0
-            for word in words_dict:
-                length += pow(words_dict[word] * words_idf[word], 2)
-            length = math.sqrt(length)
-            length = length / sum_of_words
-            self.con.execute("update url_list set length = %f where rowid = %d" % (length, url_id))
+        for url_record in url_count:
+            length = math.sqrt(url_record[2])
+            length = length / url_record[1]
+            self.con.execute("update url_list set length = %f where rowid = %d" % (length, url_record[0]))
 
         self.db_commit()
 
