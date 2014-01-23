@@ -3,7 +3,7 @@
 import search
 c = search.Crawler('db_acm')
 c.create_index_tables()
-c.crawl("http://dl.acm.org/pub.cfm?id=J204")
+c.crawl("http://dl.acm.org/pub.cfm?id=J204", "ACM Computing Surveys (CSUR)")
 c.count_idf()
 c.count_vectors_length()
 

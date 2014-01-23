@@ -60,15 +60,29 @@ class Crawler:
         else:
             return res[0]
 
-    def get_entry_id_url_list(self, url, title, authors, create_new=True):
+    def get_entry_id_url_list(self, url, title, authors, issue_id, create_new=True):
         """ Return id of row in table if this row exists
-        Else create this row and return id"""
+        Else create this row and return id for url"""
         cur = self.con.execute(
             "select rowid from url_list where url = '%s'" % url)
         res = cur.fetchone()
         if res is None:
             cur = self.con.execute(
-                "insert into url_list (url, title, authors) values ('%s', '%s', '%s')" % (url, title, authors))
+                "insert into url_list (url, title, authors, issue_id) values ('%s', '%s', '%s', '%s')"
+                % (url, title, authors, issue_id))
+            return cur.lastrowid
+        else:
+            return res[0]
+
+    def get_entry_id_issue(self, url, name, jour_id, create_new=True):
+        """ Return id of row in table if this row exists
+        Else create this row and return id for issue"""
+        cur = self.con.execute(
+            "select rowid from issue where url = '%s'" % url)
+        res = cur.fetchone()
+        if res is None:
+            cur = self.con.execute(
+                "insert into issue (jour_id, name, url) values ('%s', '%s', '%s')" % (jour_id, name, url))
             return cur.lastrowid
         else:
             return res[0]
@@ -91,7 +105,7 @@ class Crawler:
         splitter = re.compile('\\W*')
         return [s.lower() for s in splitter.split(text) if s != '']
 
-    def add_to_index(self, url, text, title, authors, count):
+    def add_to_index(self, url, text, title, authors, count, issue_id):
         """ Add all words from text (from url) to database.
         This url becomes indexed """
         if self.is_indexed(url):
@@ -113,7 +127,7 @@ class Crawler:
             for word in words_from_abstract:
                 words.append(word)
 
-        url_id = self.get_entry_id_url_list(url, title, authors)
+        url_id = self.get_entry_id_url_list(url, title, authors, issue_id)
 
         for i in range(len(words)):
             word = words[i]
@@ -197,8 +211,11 @@ class Crawler:
         new_url = url[0: ind]
         return new_url
 
-    def crawl(self, journal_url, depth=2):
+    def crawl(self, journal_url, name, depth=2):
         """ Begin crawling journal in ACM Library """
+
+        print " Journal link: " + journal_url
+        journal_id = self.get_entry_id('journal', 'name', name)
 
         link = self.open_tab(journal_url, self.ARCHIVE_TAB_NAME)
         if link is None:
@@ -210,22 +227,26 @@ class Crawler:
 
         count = 1
         for link in links:
+            info = link.string
+
             #DEBUG
-            if count > 10:
+            if count > 20:
                 break
             if not (link['href'].startswith("citation")):
                 continue
 
             ref = self.delete_user_info(link['href'])
+            issue_id = self.get_entry_id_issue(self.BASE + ref, info, journal_id)
+
             print "=============="
-            print " Journal link: " + self.BASE + ref
+            print " Issue link: " + self.BASE + ref
             print "=============="
             list_vol = self.open_tab(self.BASE + ref, self.TABLE_OF_CONTENTS_TAB_NAME)
             list_of_papers = self.get_list_of_links(self.BASE + list_vol)
 
             for paper in list_of_papers:
                 #DEBUG
-                if count > 10:
+                if count > 20:
                     break
                 paper_ref = self.delete_user_info(paper['href'])
 
@@ -244,7 +265,7 @@ class Crawler:
                     text = self.get_abstract_text(self.BASE + paper_abstract)
                     meta = self.get_title(self.BASE + paper_ref)
 
-                    self.add_to_index(self.BASE + paper_ref, text, meta[0], meta[1], count)
+                    self.add_to_index(self.BASE + paper_ref, text, meta[0], meta[1], count, issue_id)
                     count += 1
                     self.db_commit()
 
@@ -293,7 +314,9 @@ class Crawler:
         if res is not None:
             return
 
-        self.con.execute('create table url_list(url, length, title, authors)')
+        self.con.execute('create table url_list(url, length, title, authors, issue_id)')
+        self.con.execute('create table issue(jour_id, name, url)')
+        self.con.execute('create table journal(name)')
         self.con.execute('create table word_list(word, idf)')
         self.con.execute('create table word_location(url_id, word_id, location)')
         self.con.execute('create table link(from_id integer, to_id integer)')

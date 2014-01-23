@@ -85,7 +85,10 @@ class Searcher:
 
     def get_url_by_id(self, url_id):
         '''Return url by its id'''
-        url = self.con.execute("select url, title, authors from url_list where rowid = '%s'" % url_id).fetchall()[0]
+        url = self.con.execute("select url_list.url, title, authors, journal.name, issue.name from url_list "
+                               "join issue on url_list.issue_id = issue.rowid "
+                               "join journal on issue.jour_id = journal.rowid "
+                               "where url_list.rowid = '%s'" % url_id).fetchall()[0]
         return url
 
     @staticmethod
@@ -157,10 +160,14 @@ class Searcher:
         top_n = [(pair[1], pair[0]) for pair in heap]
 
         print "Answer: "
+        number = 1
         for url_id in top_n:
             if url_id[1] > 0:
-                print "id = %4d  cos = %f" % (url_id[0], url_id[1])
-                print self.get_url_by_id(url_id[0])[0]
-                print self.get_url_by_id(url_id[0])[1]
-                print self.get_url_by_id(url_id[0])[2]
+                print "%2d. id = %4d  cos = %f" % (number, url_id[0], url_id[1])
+                number += 1
+                print "    " + self.get_url_by_id(url_id[0])[0]
+                print "    " + self.get_url_by_id(url_id[0])[1]
+                print "    " + self.get_url_by_id(url_id[0])[2]
+                print "    " + self.get_url_by_id(url_id[0])[3]
+                print "    " + self.get_url_by_id(url_id[0])[4]
 
