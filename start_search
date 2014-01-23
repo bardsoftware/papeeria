@@ -2,6 +2,6 @@
 
 import searcher
 s = searcher.Searcher('db_acm')
-s.cos_search("Quality of service merry christmas a lot of strange words service", 10)
+s.cos_search("Quality of service service service service service ", 10)
 
 

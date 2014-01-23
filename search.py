@@ -60,6 +60,19 @@ class Crawler:
         else:
             return res[0]
 
+    def get_entry_id_url_list(self, url, title, authors, create_new=True):
+        """ Return id of row in table if this row exists
+        Else create this row and return id"""
+        cur = self.con.execute(
+            "select rowid from url_list where url = '%s'" % url)
+        res = cur.fetchone()
+        if res is None:
+            cur = self.con.execute(
+                "insert into url_list (url, title, authors) values ('%s', '%s', '%s')" % (url, title, authors))
+            return cur.lastrowid
+        else:
+            return res[0]
+
     def get_text_only(self, soup):
         """ Return text from Soup of page"""
         v = soup.string
@@ -78,7 +91,7 @@ class Crawler:
         splitter = re.compile('\\W*')
         return [s.lower() for s in splitter.split(text) if s != '']
 
-    def add_to_index(self, url, text, title, count):
+    def add_to_index(self, url, text, title, authors, count):
         """ Add all words from text (from url) to database.
         This url becomes indexed """
         if self.is_indexed(url):
@@ -91,7 +104,6 @@ class Crawler:
 
         words = []
         if title is not None:
-            #print title
             words = self.separate_words(title)
 
         if (len(text) < 50) and (self.ABS_NOT_AVAILABLE in text):
@@ -101,7 +113,7 @@ class Crawler:
             for word in words_from_abstract:
                 words.append(word)
 
-        url_id = self.get_entry_id('url_list', 'url', url)
+        url_id = self.get_entry_id_url_list(url, title, authors)
 
         for i in range(len(words)):
             word = words[i]
@@ -159,8 +171,13 @@ class Crawler:
             print "I can't get title of: %s" % url
             return
         soup = BeautifulSoup(con.read())
-        title = soup.title.string
-        return title
+
+        authors = soup.findAll(attrs={"name":"citation_authors"})
+        #print "Authors: %s" % authors[0]['content']
+        title = soup.findAll(attrs={"name":"citation_title"})
+        #print "Title: %s" % title[0]['content']
+        return title[0]['content'], authors[0]['content']
+
 
     def get_abstract_text(self, url):
         """ Return text of article's abstract"""
@@ -194,8 +211,11 @@ class Crawler:
         count = 1
         for link in links:
             #DEBUG
-            #if count > 5:
-            #    break
+            if count > 10:
+                break
+            if not (link['href'].startswith("citation")):
+                continue
+
             ref = self.delete_user_info(link['href'])
             print "=============="
             print " Journal link: " + self.BASE + ref
@@ -205,17 +225,26 @@ class Crawler:
 
             for paper in list_of_papers:
                 #DEBUG
-                #if count > 5:
-                #    break
+                if count > 10:
+                    break
                 paper_ref = self.delete_user_info(paper['href'])
+
                 if (len(dict(paper.attrs)) == 1) and (paper_ref.startswith(self.IS_PAPER_LINK)):
+                    ref = self.BASE + paper_ref
+                    is_already_indexed = self.con.execute("select rowid from url_list where url = '%s'" %
+                                                        ref).fetchone()
+                    if is_already_indexed is not None:
+                        print "%4d %s is already indexed" % (count, ref)
+                        count += 1
+                        continue
+
                     paper_abstract = self.open_tab(self.BASE + paper_ref, self.ABSTRACT_TAB_NAME)
                     if paper_abstract is None:
                         continue
                     text = self.get_abstract_text(self.BASE + paper_abstract)
-                    title = self.get_title(self.BASE + paper_ref)
+                    meta = self.get_title(self.BASE + paper_ref)
 
-                    self.add_to_index(self.BASE + paper_ref, text, title, count)
+                    self.add_to_index(self.BASE + paper_ref, text, meta[0], meta[1], count)
                     count += 1
                     self.db_commit()
 
@@ -262,15 +291,9 @@ class Crawler:
         """ Create database tables """
         res = self.con.execute('select name from sqlite_master where type="table" and name="url_list"').fetchone()
         if res is not None:
-            self.con.execute('delete from url_list')
-            self.con.execute('delete from word_list')
-            self.con.execute('delete from word_location')
-            self.con.execute('delete from link')
-            self.con.execute('delete from link_words')
-            self.db_commit()
             return
 
-        self.con.execute('create table url_list(url, length)')
+        self.con.execute('create table url_list(url, length, title, authors)')
         self.con.execute('create table word_list(word, idf)')
         self.con.execute('create table word_location(url_id, word_id, location)')
         self.con.execute('create table link(from_id integer, to_id integer)')

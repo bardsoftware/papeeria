@@ -85,7 +85,7 @@ class Searcher:
 
     def get_url_by_id(self, url_id):
         '''Return url by its id'''
-        url = self.con.execute("select url from url_list where rowid = '%s'" % url_id).fetchone()[0]
+        url = self.con.execute("select url, title, authors from url_list where rowid = '%s'" % url_id).fetchall()[0]
         return url
 
     @staticmethod
@@ -158,6 +158,9 @@ class Searcher:
 
         print "Answer: "
         for url_id in top_n:
-            print "id = %4d  cos = %f" % (url_id[0], url_id[1])
-            print self.get_url_by_id(url_id[0])
+            if url_id[1] > 0:
+                print "id = %4d  cos = %f" % (url_id[0], url_id[1])
+                print self.get_url_by_id(url_id[0])[0]
+                print self.get_url_by_id(url_id[0])[1]
+                print self.get_url_by_id(url_id[0])[2]
 
