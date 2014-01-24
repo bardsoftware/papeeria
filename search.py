@@ -187,10 +187,18 @@ class Crawler:
         soup = BeautifulSoup(con.read())
 
         authors = soup.findAll(attrs={"name":"citation_authors"})
+        if len(authors) > 0:
+            authors = authors[0]['content']
+        else:
+            authors = "Authors are unknown"
         #print "Authors: %s" % authors[0]['content']
         title = soup.findAll(attrs={"name":"citation_title"})
+        if len(title) > 0:
+            title = title[0]['content']
+        else:
+            title = "Title is unknown"
         #print "Title: %s" % title[0]['content']
-        return title[0]['content'], authors[0]['content']
+        return title, authors
 
 
     def get_abstract_text(self, url):
@@ -230,8 +238,8 @@ class Crawler:
             info = link.string
 
             #DEBUG
-            if count > 20:
-                break
+            #if count > 20:
+            #    break
             if not (link['href'].startswith("citation")):
                 continue
 
@@ -246,8 +254,8 @@ class Crawler:
 
             for paper in list_of_papers:
                 #DEBUG
-                if count > 20:
-                    break
+                #if count > 20:
+                #    break
                 paper_ref = self.delete_user_info(paper['href'])
 
                 if (len(dict(paper.attrs)) == 1) and (paper_ref.startswith(self.IS_PAPER_LINK)):
