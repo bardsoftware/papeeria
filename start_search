@@ -1,7 +1,7 @@
 #!/usr/bin/env python 
 
 import searcher
-s = searcher.Searcher('db_acm')
+s = searcher.Searcher('db_acm_csur_splash_030214')
 s.cos_search("Quality of service service service service service ", 10)
 
 

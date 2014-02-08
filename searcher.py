@@ -66,28 +66,32 @@ class Searcher:
             return clear_list[0: n]
 
 
-    def find_rows(self, words):
+    def find_rows(self, words, wordid_tfidf):
         '''Find documents which contain one of words'''
         if len(words) == 0:
             return []
 
-        word_id_list = []
+#        word_id_list = []
         table_num = 0
         clause_list = ''
 
+        query = 'select url_id, sum(tfidf) as cos from ('
         for word in words:
             word_row = self.con.execute(
                 "select rowid from word_list where word = '%s'" % word).fetchone()
             if word_row is not None:
                 word_id = word_row[0]
+                
                 #print "word_id: %d" % word_id
-                word_id_list.append(word_id)
+#                word_id_list.append(word_id)
                 if table_num > 0:
-                    clause_list += ' or '
-                clause_list += 'word_id = %d' % word_id
+                    query += ' union '
+                query += 'select url_id, %f as tfidf from word_location where word_id=%d' % (wordid_tfidf[word], word_id)
                 table_num += 1
 
-        query = 'select distinct url_id from word_location where %s ' % clause_list
+        query += ') group by url_id'
+        print query
+ #       query = 'select distinct url_id from word_location where %s ' % clause_list
         result = self.con.execute(query)
         rows = [row for row in result]
         return rows
@@ -174,15 +178,18 @@ class Searcher:
         n means taking n top words from the text
         top is counted by (tf * idf) '''
 
+        print "-- 0"
         text_words = Searcher.separate_words(text)
         text_words_tf_idf = self.get_top_tf_idf(text_words, n)
         text_length = Searcher.count_length(text_words_tf_idf)
 
         top_text_words = self.get_top_words(text_words, self.MAGIC_NUMBER)
-        url_ids = self.find_rows(top_text_words)
+        print "-- 1"
+        url_ids = self.find_rows(top_text_words, {word: idf for (word, idf) in text_words_tf_idf})
 
         url_ids = [url_id[0] for url_id in url_ids]
         url_count = len(url_ids)
+        print "-- 2"
 
         url_full_count = self.con.execute("select count(rowid) from url_list").fetchone()[0]
         print "Number of documents: %d " % url_full_count
@@ -191,6 +198,7 @@ class Searcher:
         print "Searching..."
 
         heap = []
+        url_ids = []
         for url_id in url_ids:
             #print url_id
             url_words = self.con.execute("select word from word_list join word_location on "
@@ -209,9 +217,11 @@ class Searcher:
                 heapq.heappush(heap, (url_cos, url_id))
             else:
                 heapq.heappushpop(heap, (url_cos, url_id))
+        print "-- 3"
 
         heap.sort(reverse=True)
         top_n = [(pair[1], pair[0]) for pair in heap]
+        print "-- 4"
 
         print "Answer: "
         number = 1
