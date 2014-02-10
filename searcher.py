@@ -15,6 +15,7 @@ from pysqlite2 import dbapi2 as sqlite
 import operator
 import math
 import heapq
+import sys
 
 class Searcher:
     SHOW_ANSWER = 10
@@ -185,10 +186,10 @@ class Searcher:
         url_count = len(url_ids)
 
         url_full_count = self.con.execute("select count(rowid) from url_list").fetchone()[0]
-        print "Number of documents: %d " % url_full_count
+        print >> sys.stderr, "Number of documents: %d " % url_full_count
 
-        print "Number of documents after cutting: %d " % url_count
-        print "Searching..."
+        print >> sys.stderr, "Number of documents after cutting: %d " % url_count
+        print >> sys.stderr, "Searching..."
 
         heap = []
         for url_id in url_ids:
@@ -213,15 +214,21 @@ class Searcher:
         heap.sort(reverse=True)
         top_n = [(pair[1], pair[0]) for pair in heap]
 
-        print "Answer: "
+        print '{"articles": ['
         number = 1
         for url_id in top_n:
             if url_id[1] > 0:
-                print "%2d. id = %4d  cos = %f" % (number, url_id[0], url_id[1])
+                if number > 1:
+                    print ","
+                article_data = self.get_url_by_id(url_id[0])
+                print "{"
+                print '"docid": %4d,' % url_id[0]
+                print '"rank": %f, ' % url_id[1]
+                print '"url": "%s", ' % article_data[0]
+                print '"title": "%s", ' % article_data[1]
+                print '"authors": "%s", ' % article_data[2].encode('utf-8')
+                print '"journal": "%s", ' % article_data[3]
+                print '"issue": "%s" ' % article_data[4]
+                print "}"
                 number += 1
-                print "    " + self.get_url_by_id(url_id[0])[0]
-                print "    " + self.get_url_by_id(url_id[0])[1]
-                print "    " + self.get_url_by_id(url_id[0])[2]
-                print "    " + self.get_url_by_id(url_id[0])[3]
-                print "    " + self.get_url_by_id(url_id[0])[4]
-
+        print "]}"
