@@ -67,7 +67,7 @@ class Searcher:
             return clear_list[0: n]
 
 
-    def find_rows(self, words, words_tfidf):
+    def find_rows(self, words, words_tf_idf_idf):
         '''Find documents which contain one of words and count cos distance'''
         if len(words) == 0:
             return []
@@ -75,28 +75,32 @@ class Searcher:
         word_id_list = []
         table_num = 0
         #clause_list = ''
-        query = 'select url_id, sum(tfidf  * word_count) / length from ('
+        query = 'SELECT url_id, denorm_rank / url_list.length AS rank FROM (' \
+                ' SELECT url_id, sum/count(*) AS denorm_rank FROM ('
+        fat_query = 'SELECT url_id as urlid, sum(weight) AS sum, count(*) AS match_words_num FROM ('
 
         for word in words:
             word_row = self.con.execute(
-                "select rowid from word_list where word = '%s'" % word).fetchone()
+                "SELECT rowid FROM word_list WHERE word = '%s'" % word).fetchone()
             if word_row is not None:
                 word_id = word_row[0]
-                #print "word_id: %d" % word_id
                 word_id_list.append(word_id)
                 if table_num > 0:
-                    query += ' union '
-                query += 'select url_id, word_id, %f AS tfidf, count(location) AS word_count , length ' \
-                         'FROM word_location WL JOIN url_list UL ON (WL.url_id = UL.rowid and word_id = %d) ' \
-                         'GROUP BY url_id, word_id, length' % (words_tfidf[word], word_id)
+                    fat_query += ' UNION '
+                fat_query += 'SELECT url_id, count(*) * %f AS weight ' \
+                         'FROM word_location WHERE word_id = %d ' \
+                         'GROUP BY url_id' % (words_tf_idf_idf[word], word_id)
                 table_num += 1
 
-        query += ') group by url_id '
+        fat_query += ') GROUP BY urlid '
+        query += fat_query
+        query += ') as FatQuery JOIN word_location ON (FatQuery.urlid = word_location.url_id)' \
+                 'GROUP BY urlid, sum, match_words_num)' \
+                 'JOIN url_list ON url_list.rowid = url_id'
 #        print query
+#        print fat_query
         result = self.con.execute(query)
         rows = [row for row in result]
-
-#        print rows
         return rows
 
 
@@ -117,22 +121,22 @@ class Searcher:
         else:
             return idf[0]
 
-    def get_top_tf_idf(self, words, n):
-        '''Get top n words from list words using tf * idf'''
+    def get_top_tf_idf(self, words, top_words):
+        '''Return values of tf * idf * idf for words in top_words'''
         tf_dict = self.tf(words)
-        heap = []
+        idf_dict = {word: 0 for word in top_words}
 
         for word in tf_dict:
-            idf = self.idf(word)
-            tf_idf = tf_dict[word] * idf
-            if len(heap) < n:
-                heapq.heappush(heap, (tf_idf, word))
+            if word in top_words:
+                idf = self.idf(word)
+                idf_dict[word] = idf
+                tf_dict[word] = tf_dict[word] * idf * idf
             else:
-                heapq.heappushpop(heap, (tf_idf, word))
+                tf_dict[word] = 0
 
-        heap.sort(reverse=True)
-        inverted = [(pair[1], pair[0]) for pair in heap]
-        return inverted
+        tf_dict = {word: tf_dict[word] for word in tf_dict if tf_dict[word] > 0}
+        inverted = [(word, tf_dict[word]) for word in tf_dict]
+        return inverted, idf_dict
 
 
     def get_url_by_id(self, url_id):
@@ -144,9 +148,9 @@ class Searcher:
         return url
 
     @staticmethod
-    def count_length(l):
+    def count_length(l, idfs):
         '''Return Euclidean norm of the vector, saved in list of pairs'''
-        words_dict = {pair[0]: pair[1] for pair in l}
+        words_dict = {pair[0]: (pair[1] / idfs[pair[0]]) for pair in l}
         length = 0
         for word in words_dict:
             length = length + words_dict[word] * words_dict[word]
@@ -182,11 +186,18 @@ class Searcher:
         top is counted by (tf * idf) '''
 
         text_words = Searcher.separate_words(text)
-        text_words_tf_idf = self.get_top_tf_idf(text_words, n)
-        text_length = Searcher.count_length(text_words_tf_idf)
+        top_text_words = self.get_top_words(text_words, n)
 
-        top_text_words = self.get_top_words(text_words, self.MAGIC_NUMBER)
-        url_ids_cos = self.find_rows(top_text_words, {word: idf for (word, idf) in text_words_tf_idf})
+        answer = self.get_top_tf_idf(text_words, top_text_words)
+        text_words_tf_idf_idf = answer[0]
+        top_idfs = answer[1]
+
+        text_length = Searcher.count_length(text_words_tf_idf_idf, top_idfs)
+
+#        print top_text_words
+#        print text_words_tf_idf_idf
+
+        url_ids_cos = self.find_rows(top_text_words, {word: tf_idf_idf for (word, tf_idf_idf) in text_words_tf_idf_idf})
 
         #url_ids = [url_id[0] for url_id in url_ids]
         url_count = len(url_ids_cos)
@@ -197,6 +208,7 @@ class Searcher:
         print >> sys.stderr, "Number of documents after cutting: %d " % url_count
         print >> sys.stderr, "Searching..."
 
+        '''
         heap = []
         url_ids = []
         for url_id in url_ids:
@@ -217,10 +229,10 @@ class Searcher:
                 heapq.heappush(heap, (url_cos, url_id))
             else:
                 heapq.heappushpop(heap, (url_cos, url_id))
-
+        '''
         heap = []
         for url_pair in url_ids_cos:
-            url_cos = url_pair[1]
+            url_cos = url_pair[1] / text_length
             url_id = url_pair[0]
             if len(heap) < self.SHOW_ANSWER:
                 heapq.heappush(heap, (url_cos, url_id))
