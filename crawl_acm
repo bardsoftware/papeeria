@@ -1,8 +1,0 @@
-#!/usr/bin/env python 
-
-import search
-c = search.Crawler('db_acm')
-c.create_index_tables()
-c.crawl("http://dl.acm.org/pub.cfm?id=J204&CFID=261281623&CFTOKEN=70296603") 
-
-
