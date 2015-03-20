@@ -4,7 +4,7 @@ Named entity recognition based on wikipedia.com categories
 ### Инструкция по запуску
 1. Установить необходимые библиотеки:
     *   Python: mwclient, mwparserfromhell
-    *   Java: lucene-5.0.0
+    *   Java: lucene-5.0.0. Учтите - используется Java 1.8!
 
 2. Скачать корпус:
 
