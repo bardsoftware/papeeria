@@ -10,7 +10,7 @@ Named entity recognition based on wikipedia.com categories
 
 Качается скриптом `wiki_crawler.py`. Скрипт запускается командой `python wiki_crawler.py 'category name' [-e]`.
 Аргумент -e полностью стирает предыдущий корпус. Без аргумента категория добавляется к уже существующим. Используется python2.x
-Имя категории можно писать без пробела. Пример запуска: `python wiki_crawler.py 'image processing'`
+Имя категории можно писать с пробелами вместо нижних подчёркиваний. Пример запуска: `python wiki_crawler.py 'image processing'`
 
 3. Проиндексировать корпус:
 
