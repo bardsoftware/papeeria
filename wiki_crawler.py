@@ -1,32 +1,63 @@
 # encoding: utf-8
-import mwclient
-from argparse import ArgumentParser
-import mwparserfromhell as mwparser
 import os
+import requests
+import wikipedia as wiki
+from shutil import rmtree
+from bs4 import BeautifulSoup
+from argparse import ArgumentParser
+
+HTTP = 'http:'
+DOMAIN = 'wikipedia.org'
+WIKI = '/wiki/'
+CATEGORY_EN = 'Category:'
+CATEGORY_RU = 'Категория:'
+EN = '//en.'
+RU = '//ru.'
 
 
-def get_pages(topic):
-    site = mwclient.Site('en.wikipedia.org')
-    category = site.Pages['Category:' + topic]
-    for page in category:
-        yield page
+def get_urls_and_titles_of_en_pages(category_name):
+    url = HTTP + EN + DOMAIN
+    soup = BeautifulSoup(requests.get(url + WIKI + CATEGORY_EN + category_name).text)
+    for a in soup.select('div[class=mw-category] a'):
+        if not a.get('href').startswith('/wiki/Category:'):
+            yield url + a.get('href'), a.get('title').split(' – ')[0]
 
 
-def collect(topic):
-    topic = topic.strip().replace(' ', '_')
-    out_dir = 'corpus/' + topic
+def get_urls_and_titles_of_ru_pages(category_name):
+    for en_link, _ in get_urls_and_titles_of_en_pages(category_name):
+        soup = BeautifulSoup(requests.get(en_link).text)
+        ru_link = soup.select('li.interlanguage-link > a[lang=ru]')
+        if ru_link:
+            yield HTTP + ru_link[0].get('href'), ru_link[0].get('title').split(' – ')[0]
+
+
+def write(pages, dir_name):
+    out_dir = 'corpus/' + dir_name
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     with open(out_dir + '/index', 'w') as index:
         counter = 0
-        for page in get_pages(topic):
-            if not page.name.startswith('Category:'):
-                page_filename = '/page%03d' % counter
-                with open(out_dir + page_filename, 'w') as out:
-                    out.write(mwparser.parse(page.text()).strip_code().encode('utf-8'))
-                index.write('%s %s\n' % (page_filename, page.name.encode('ascii', 'ignore')))
-                print '\'%s\' page has been processed' % page.name
-                counter += 1
+        for page in pages:
+            page_filename = '/page%03d' % counter
+            with open(out_dir + page_filename, 'w') as out:
+                out.write(page.content)
+            index.write('%s %s\n' % (page_filename, page.title))
+            print('\'%s\' page has been processed' % page.title)
+            counter += 1
+
+
+def get_pages(urls_and_titles):
+    for _, title in urls_and_titles:
+        yield wiki.page(title)
+
+
+def crawl(category_name, download_ru):
+    dir_name = category_name
+    if download_ru:
+        wiki.set_lang('ru')
+        dir_name += '_ru'
+    urls = get_urls_and_titles_of_ru_pages(category_name) if download_ru else get_urls_and_titles_of_en_pages(category_name)
+    write(get_pages(urls), dir_name)
 
 
 if __name__ == '__main__':
@@ -35,10 +66,11 @@ if __name__ == '__main__':
                            help='Category to extract from Wikipedia')
     argparser.add_argument('-e', default=False, const=True, nargs='?',
                            help='If -e, erases the previous corpus. Just appends a new category otherwise')
+    argparser.add_argument('-ru', default=False, const=True, nargs='?',
+                           help='If -ru, downloads only russian pages, if available. '
+                                'Downloads english ones otherwise')
     args = argparser.parse_args()
     if args.e:
-        from shutil import rmtree
-
         rmtree('corpus')
-    collect(args.category)
-
+    category_name = args.category.strip().replace(' ', '_')
+    crawl(category_name, args.ru)
