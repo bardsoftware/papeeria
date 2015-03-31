@@ -3,16 +3,17 @@ Named entity recognition based on wikipedia.com categories
 
 ### Инструкция по запуску
 1. Установить необходимые библиотеки:
-    *   Python: mwclient, mwparserfromhell
+    *   Python: requests, wikipedia (автоматически тянет за собой beautifulsoup)
     *   Java: lucene-5.0.0. Учтите - используется Java 1.8!
 
 2. Скачать корпус:
 
-Качается скриптом `wiki_crawler.py`. Скрипт запускается командой `python wiki_crawler.py 'category name' [-e]`.
-Аргумент -e полностью стирает предыдущий корпус. Без аргумента категория добавляется к уже существующим. Используется python2.x
-Имя категории можно писать с пробелами вместо нижних подчёркиваний. Пример запуска: `python wiki_crawler.py 'image processing'`
+Качается скриптом `wiki_crawler.py`. Скрипт запускается командой `python3 wiki_crawler.py 'category name' [-e] [-ru]`.
+Аргумент -e полностью стирает предыдущий корпус. Без аргумента категория добавляется к уже существующим. Используется python3.x
+Аргумент -ru включает загрузку только русских версий (если таковые имеются).
+Имя категории можно писать с пробелами вместо нижних подчёркиваний. Пример запуска: `python3 wiki_crawler.py 'image processing'`
 
-3. Проиндексировать корпус:
+3. Проиндексировать корпус: (тут и далее пока только для английского языка. Скоро появится версия для русского)
 
 `java org.apache.lucene.demo.IndexFiles [-index INDEX_PATH] [-docs DOCS_PATH] [-update]`
 
