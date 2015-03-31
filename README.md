@@ -13,21 +13,26 @@ Named entity recognition based on wikipedia.com categories
 Аргумент -ru включает загрузку только русских версий (если таковые имеются).
 Имя категории можно писать с пробелами вместо нижних подчёркиваний. Пример запуска: `python3 wiki_crawler.py 'image processing'`
 
-3. Проиндексировать корпус: (тут и далее пока только для английского языка. Скоро появится версия для русского)
+3. Проиндексировать корпус:
 
-`java org.apache.lucene.demo.IndexFiles [-index INDEX_PATH] [-docs DOCS_PATH] [-update]`
+Внимание - используйте аргумент [-ru], когда индексируете русскоязычный корпус!
+
+`java org.apache.lucene.demo.IndexFiles [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-ru]`
 
  Пример:
 
- `java org.apache.lucene.demo.IndexFiles -index index -docs corpus`
+ `java org.apache.lucene.demo.IndexFiles -index index -docs corpus -ru`
 
 4. Поиск:
 
-`java org.ner.SearchFiles [-index dir] [-queries file]`
+Аргумент -pdf включает поиск по pdf-статьям, лежащим в директории queries
+Внимание - используйте аргумент [-ru], когда ищете по русскоязычному индексу!
+
+`java org.ner.SearchFiles [-index dir] [-queries queries] [-ru] [-pdf]`
 
 Пример:
 
-`java org.ner.SearchFiles -index index -queries query`
+`java org.ner.SearchFiles -index pdf -queries pdf -pdf`
 
 Команда вернет список пар "категория - вес", отсортированный по весам.
 

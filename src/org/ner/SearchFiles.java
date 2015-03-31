@@ -1,15 +1,16 @@
 package org.ner;
 
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -19,16 +20,18 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.util.PDFTextStripper;
 
 public class SearchFiles {
+	private static final int STEP = 5_000;
 
 	private SearchFiles() {
 	}
 
 	public static void main(String[] args) throws Exception {
 		String usage =
-				"Usage:\tjava org.ner.SearchFiles [-index dir] [-queries file]";
+				"Usage:\tjava org.ner.SearchFiles [-index dir] [-queries file] [-ru] [-pdf]";
 		if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
 			System.out.println(usage);
 			System.exit(0);
@@ -37,38 +40,77 @@ public class SearchFiles {
 		String index = "index";
 		String field = "contents";
 		String queries = null;
+		boolean ru = false;
+		boolean pdf = false;
 		int hitsPerPage = 50;
+
 
 		for (int i = 0; i < args.length; i++) {
 			if ("-index".equals(args[i])) {
 				index = args[i + 1];
 				i++;
-			} else if ("-queries".equals(args[i])) {
+			} else if ("-query".equals(args[i])) {
 				queries = args[i + 1];
 				i++;
+			} else if ("-ru".equals(args[i])) {
+				ru = true;
+			} else if ("-pdf".equals(args[i])) {
+				pdf = true;
 			}
 		}
-
 		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
 			IndexSearcher searcher = new IndexSearcher(reader);
-			Analyzer analyzer = new StandardAnalyzer();
+			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
 
 			QueryParser parser = new QueryParser(field, analyzer);
-			String line = new String(Files.readAllBytes(Paths.get(queries)));
-			line = line.replaceAll("[^A-Za-z0-9 ]", "").trim();
-			Query query = parser.parse(line);
-			search(searcher, query, hitsPerPage);
+
+			if (pdf) {
+				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(queries))) {
+					for (Path pathToPDF : directoryStream) {
+						Map<String, Float> searchResult = new HashMap<>();
+						try (PDDocument document = PDDocument.load(pathToPDF.toString())) {
+							PDFTextStripper stripper = new PDFTextStripper();
+							String stringQuery = removeNonAlphanumeric(stripper.getText(document));
+							System.out.println(pathToPDF.getFileName());
+							String[] chunks = stringQuery.split(String.format("(?<=\\G.{%d})", STEP));
+
+							for (String s : chunks) {
+								Query query = parser.parse(s);
+								Map<String, Float> chunkResult = search(searcher, query, hitsPerPage);
+								for (Map.Entry<String, Float> entry : chunkResult.entrySet()) {
+									if (searchResult.containsKey(entry.getKey())) {
+										searchResult.put(
+												entry.getKey(), searchResult.get(entry.getKey()) + entry.getValue());
+									} else {
+										searchResult.put(entry.getKey(), entry.getValue());
+									}
+								}
+							}
+						}
+						sortByWeights(searchResult)
+								.forEach(entry -> System.out.printf("%s : %f%n", entry.getKey(), entry.getValue()));
+					}
+				}
+			} else {
+				String stringQuery = removeNonAlphanumeric(new String(Files.readAllBytes(Paths.get(queries))));
+				Query query = parser.parse(stringQuery);
+				sortByWeights(search(searcher, query, hitsPerPage))
+						.forEach(entry -> System.out.printf("%s : %f%n", entry.getKey(), entry.getValue()));
+			}
+
 		}
 	}
 
-	public static void search(IndexSearcher searcher, Query query,
+	private static String removeNonAlphanumeric(String s) {
+		return s.replaceAll("[^\\p{L}\\p{Nd}]+", " ");
+	}
+
+	public static Map<String, Float> search(IndexSearcher searcher, Query query,
 	                          int hitsPerPage) throws IOException {
 
 		TopDocs results = searcher.search(query, hitsPerPage);
 		ScoreDoc[] hits = results.scoreDocs;
 
-		int numTotalHits = results.totalHits;
-		System.out.println(numTotalHits + " total matching documents");
 		Map<String, Float> categoryIntoScore = new HashMap<>();
 		for (ScoreDoc hit : hits) {
 			String category = searcher.doc(hit.doc).get("category");
@@ -78,9 +120,13 @@ public class SearchFiles {
 				categoryIntoScore.put(category, hit.score);
 			}
 		}
-		List<Map.Entry<String, Float>> scores = new ArrayList<>(categoryIntoScore.entrySet());
+		return categoryIntoScore;
+	}
+
+	public static List<Map.Entry<String, Float>> sortByWeights(Map<String, Float> categoryIntoWeight) {
+		List<Map.Entry<String, Float>> scores = new ArrayList<>(categoryIntoWeight.entrySet());
 		Collections.sort(scores, (Map.Entry<String, Float> e1, Map.Entry<String, Float> e2) ->
 				Float.compare(e2.getValue(), e1.getValue()));
-		scores.forEach(s -> System.out.printf("%s : %f%n", s.getKey(), s.getValue()));
+		return scores;
 	}
 }

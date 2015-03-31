@@ -2,6 +2,7 @@ package org.ner;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -34,12 +35,14 @@ public class IndexFiles {
 
 	public static void main(String[] args) {
 		String usage = "java org.ner.IndexFiles"
-				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
+				+ " [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-ru]\n\n"
 				+ "This indexes the documents in DOCS_PATH, creating a Lucene index"
 				+ "in INDEX_PATH that can be searched with SearchFiles";
 		String indexPath = "index";
 		String docsPath = null;
 		boolean create = true;
+		boolean ru = false;
+
 		for (int i = 0; i < args.length; i++) {
 			if ("-index".equals(args[i])) {
 				indexPath = args[i + 1];
@@ -49,6 +52,8 @@ public class IndexFiles {
 				i++;
 			} else if ("-update".equals(args[i])) {
 				create = false;
+			} else if ("-ru".equals(args[i])) {
+				ru = true;
 			}
 		}
 
@@ -69,7 +74,7 @@ public class IndexFiles {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
 			Directory dir = FSDirectory.open(Paths.get(indexPath));
-			Analyzer analyzer = new StandardAnalyzer();
+			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
 			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 			if (create) {
