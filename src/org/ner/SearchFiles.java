@@ -1,13 +1,15 @@
 package org.ner;
 
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.ru.RussianAnalyzer;
@@ -31,7 +33,7 @@ public class SearchFiles {
 
 	public static void main(String[] args) throws Exception {
 		String usage =
-				"Usage:\tjava org.ner.SearchFiles [-index dir] [-queries file] [-ru] [-pdf]";
+				"Usage:\tjava org.ner.SearchFiles [-index dir] [-query file] [-ru] [-pdf]";
 		if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
 			System.out.println(usage);
 			System.exit(0);
@@ -58,6 +60,12 @@ public class SearchFiles {
 				pdf = true;
 			}
 		}
+
+		if (queries == null) {
+			System.err.println("-query argument is absent");
+			return;
+		}
+
 		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
 			IndexSearcher searcher = new IndexSearcher(reader);
 			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
@@ -89,6 +97,7 @@ public class SearchFiles {
 						}
 						sortByWeights(searchResult)
 								.forEach(entry -> System.out.printf("%s : %f%n", entry.getKey(), entry.getValue()));
+						System.out.println();
 					}
 				}
 			} else {
