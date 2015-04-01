@@ -123,7 +123,10 @@ public class SearchFiles {
 			} else {
 				String stringQuery = removeNonAlphanumeric(new String(Files.readAllBytes(Paths.get(queries))));
 				Query query = parser.parse(stringQuery);
-				sortByWeights(search(searcher, query, hitsPerPage)).forEach(System.out::println);
+				List<CategoryWeightPair> sorted = sortByWeights(search(searcher, query, hitsPerPage));
+				sorted.forEach(System.out::println);
+				System.out.println("\nClustering result:");
+				KMeans(sorted).forEach(System.out::println);
 			}
 		}
 	}
@@ -132,19 +135,14 @@ public class SearchFiles {
 		return s.replaceAll("[^\\p{L}\\p{Nd}]+", " ");
 	}
 
-	static Map<String, Float> search(IndexSearcher searcher, Query query,
-	                          int hitsPerPage) throws IOException {
+	static Map<String, Float> search(IndexSearcher searcher, Query query, int hitsPerPage) throws IOException {
 		TopDocs results = searcher.search(query, hitsPerPage);
 		ScoreDoc[] hits = results.scoreDocs;
 
 		Map<String, Float> categoryIntoScore = new HashMap<>();
 		for (ScoreDoc hit : hits) {
 			String category = searcher.doc(hit.doc).get("category");
-			if (categoryIntoScore.containsKey(category)) {
-				categoryIntoScore.put(category, categoryIntoScore.get(category) + hit.score);
-			} else {
-				categoryIntoScore.put(category, hit.score);
-			}
+			addToMap(categoryIntoScore, category, hit.score);
 		}
 		return categoryIntoScore;
 	}
@@ -167,13 +165,17 @@ public class SearchFiles {
 		return storage;
 	}
 
+	static void addToMap(Map<String, Float> mapToAddIn, String keyToAdd, Float valueToAdd) {
+		if (mapToAddIn.containsKey(keyToAdd)) {
+			mapToAddIn.put(keyToAdd, mapToAddIn.get(keyToAdd) + valueToAdd);
+		} else {
+			mapToAddIn.put(keyToAdd, valueToAdd);
+		}
+	}
+
 	static void mergeTwoMaps(Map<String, Float> toMergeIn, Map<String, Float> toBeMerged) {
 		for (Map.Entry<String, Float> entry : toBeMerged.entrySet()) {
-			if (toMergeIn.containsKey(entry.getKey())) {
-				toMergeIn.put(entry.getKey(), toMergeIn.get(entry.getKey()) + entry.getValue());
-			} else {
-				toMergeIn.put(entry.getKey(), entry.getValue());
-			}
+			addToMap(toMergeIn, entry.getKey(), entry.getValue());
 		}
 	}
 }
