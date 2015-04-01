@@ -117,7 +117,7 @@ public class SearchFiles {
 						sorted.forEach(System.out::println);
 						System.out.println("\nClustering result:");
 						KMeans(sorted).forEach(System.out::println);
-						System.out.println("__________________________\n");
+						System.out.println("__________________________________\n");
 					}
 				}
 			} else {
@@ -150,10 +150,10 @@ public class SearchFiles {
 	static List<CategoryWeightPair> KMeans(List<CategoryWeightPair> searchResult) {
 		KMeansPlusPlusClusterer<CategoryWeightPair> clusterer = new KMeansPlusPlusClusterer<>(NUMBER_OF_CLUSTERS, 100);
 		List<CentroidCluster<CategoryWeightPair>> clusterResults = clusterer.cluster(searchResult);
-		CentroidCluster<CategoryWeightPair> max = Collections.max(clusterResults, (c1, c2) ->
+		CentroidCluster<CategoryWeightPair> maxCluster = Collections.max(clusterResults, (c1, c2) ->
 						Double.compare(c1.getCenter().getPoint()[0], c2.getCenter().getPoint()[0])
 		);
-		return max.getPoints();
+		return maxCluster.getPoints();
 	}
 
 	static List<CategoryWeightPair> sortByWeights(Map<String, Float> categoriesIntoWeights) {
