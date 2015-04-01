@@ -5,12 +5,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.math3.ml.clustering.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -27,6 +24,32 @@ import org.apache.pdfbox.util.PDFTextStripper;
 
 public class SearchFiles {
 	private static final int STEP = 5_000;
+	private static final int NUMBER_OF_CLUSTERS = 3;
+
+	private static class CategoryWeightPair implements Clusterable, Comparable<CategoryWeightPair> {
+		private final String category;
+		private final Float weight;
+
+		public CategoryWeightPair(Map.Entry<String, Float> pair) {
+			this.category = pair.getKey();
+			this.weight = pair.getValue();
+		}
+
+		@Override
+		public double[] getPoint() {
+			return new double[]{weight};
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s : %f", category, weight);
+		}
+
+		@Override
+		public int compareTo(CategoryWeightPair that) {
+			return -Float.compare(this.weight, that.weight);
+		}
+	}
 
 	private SearchFiles() {
 	}
@@ -40,7 +63,6 @@ public class SearchFiles {
 		}
 
 		String index = "index";
-		String field = "contents";
 		String queries = null;
 		boolean ru = false;
 		boolean pdf = false;
@@ -70,7 +92,7 @@ public class SearchFiles {
 			IndexSearcher searcher = new IndexSearcher(reader);
 			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
 
-			QueryParser parser = new QueryParser(field, analyzer);
+			QueryParser parser = new QueryParser("contents", analyzer);
 
 			if (pdf) {
 				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(queries))) {
@@ -84,39 +106,30 @@ public class SearchFiles {
 
 							for (String s : chunks) {
 								Query query = parser.parse(s);
-								Map<String, Float> chunkResult = search(searcher, query, hitsPerPage);
-								for (Map.Entry<String, Float> entry : chunkResult.entrySet()) {
-									if (searchResult.containsKey(entry.getKey())) {
-										searchResult.put(
-												entry.getKey(), searchResult.get(entry.getKey()) + entry.getValue());
-									} else {
-										searchResult.put(entry.getKey(), entry.getValue());
-									}
-								}
+								mergeTwoMaps(searchResult, search(searcher, query, hitsPerPage));
 							}
 						}
-						sortByWeights(searchResult)
-								.forEach(entry -> System.out.printf("%s : %f%n", entry.getKey(), entry.getValue()));
-						System.out.println();
+						List<CategoryWeightPair> sorted = sortByWeights(searchResult);
+						sorted.forEach(System.out::println);
+						System.out.println("\nClustering result:");
+						KMeans(sorted).forEach(System.out::println);
+						System.out.println("__________________________\n");
 					}
 				}
 			} else {
 				String stringQuery = removeNonAlphanumeric(new String(Files.readAllBytes(Paths.get(queries))));
 				Query query = parser.parse(stringQuery);
-				sortByWeights(search(searcher, query, hitsPerPage))
-						.forEach(entry -> System.out.printf("%s : %f%n", entry.getKey(), entry.getValue()));
+				sortByWeights(search(searcher, query, hitsPerPage)).forEach(System.out::println);
 			}
-
 		}
 	}
 
-	private static String removeNonAlphanumeric(String s) {
+	static String removeNonAlphanumeric(String s) {
 		return s.replaceAll("[^\\p{L}\\p{Nd}]+", " ");
 	}
 
-	public static Map<String, Float> search(IndexSearcher searcher, Query query,
+	static Map<String, Float> search(IndexSearcher searcher, Query query,
 	                          int hitsPerPage) throws IOException {
-
 		TopDocs results = searcher.search(query, hitsPerPage);
 		ScoreDoc[] hits = results.scoreDocs;
 
@@ -132,10 +145,31 @@ public class SearchFiles {
 		return categoryIntoScore;
 	}
 
-	public static List<Map.Entry<String, Float>> sortByWeights(Map<String, Float> categoryIntoWeight) {
-		List<Map.Entry<String, Float>> scores = new ArrayList<>(categoryIntoWeight.entrySet());
-		Collections.sort(scores, (Map.Entry<String, Float> e1, Map.Entry<String, Float> e2) ->
-				Float.compare(e2.getValue(), e1.getValue()));
-		return scores;
+	static List<CategoryWeightPair> KMeans(List<CategoryWeightPair> searchResult) {
+		KMeansPlusPlusClusterer<CategoryWeightPair> clusterer = new KMeansPlusPlusClusterer<>(NUMBER_OF_CLUSTERS, 100);
+		List<CentroidCluster<CategoryWeightPair>> clusterResults = clusterer.cluster(searchResult);
+		CentroidCluster<CategoryWeightPair> max = Collections.max(clusterResults, (c1, c2) ->
+						Double.compare(c1.getCenter().getPoint()[0], c2.getCenter().getPoint()[0])
+		);
+		return max.getPoints();
+	}
+
+	static List<CategoryWeightPair> sortByWeights(Map<String, Float> categoriesIntoWeights) {
+		List<CategoryWeightPair> storage = new ArrayList<>();
+		for (Map.Entry<String, Float> entry : categoriesIntoWeights.entrySet()) {
+			storage.add(new CategoryWeightPair(entry));
+		}
+		Collections.sort(storage);
+		return storage;
+	}
+
+	static void mergeTwoMaps(Map<String, Float> toMergeIn, Map<String, Float> toBeMerged) {
+		for (Map.Entry<String, Float> entry : toBeMerged.entrySet()) {
+			if (toMergeIn.containsKey(entry.getKey())) {
+				toMergeIn.put(entry.getKey(), toMergeIn.get(entry.getKey()) + entry.getValue());
+			} else {
+				toMergeIn.put(entry.getKey(), entry.getValue());
+			}
+		}
 	}
 }

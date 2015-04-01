@@ -10,9 +10,7 @@ HTTP = 'http:'
 DOMAIN = 'wikipedia.org'
 WIKI = '/wiki/'
 CATEGORY_EN = 'Category:'
-CATEGORY_RU = 'Категория:'
 EN = '//en.'
-RU = '//ru.'
 
 
 def get_urls_and_titles_of_en_pages(category_name):

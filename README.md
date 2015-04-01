@@ -1,5 +1,4 @@
 # CSC_NER
-Named entity recognition based on wikipedia.com categories
 
 ### Инструкция по запуску
 1. Установить необходимые библиотеки:
