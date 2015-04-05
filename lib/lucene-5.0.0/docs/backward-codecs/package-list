@@ -1,0 +1,9 @@
+org.apache.lucene.codecs
+org.apache.lucene.codecs.blocktree
+org.apache.lucene.codecs.lucene40
+org.apache.lucene.codecs.lucene41
+org.apache.lucene.codecs.lucene410
+org.apache.lucene.codecs.lucene42
+org.apache.lucene.codecs.lucene45
+org.apache.lucene.codecs.lucene46
+org.apache.lucene.codecs.lucene49
