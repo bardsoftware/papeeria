@@ -12,33 +12,6 @@
     Аргумент -ru включает загрузку только русских версий (если таковые имеются).
     Имя категории можно писать с пробелами вместо нижних подчёркиваний. Пример запуска: `python3 wiki_crawler.py 'image processing'`
 
-3. Проиндексировать корпус:
+3. Построение индекса и поиск:
 
-    Внимание - используйте аргумент [-ru], когда индексируете русскоязычный корпус!
-
-    `java org.apache.lucene.demo.IndexFiles [-index INDEX_PATH] [-docs DOCS_PATH] [-update] [-ru]`
-
-     Пример:
-
-     `java org.apache.lucene.demo.IndexFiles -index index -docs corpus -ru`
-
-4. Поиск:
-
-    Аргумент -pdf включает поиск по pdf-статьям, лежащим в директории queries
-    Внимание - используйте аргумент [-ru], когда ищете по русскоязычному индексу!
-
-    `java org.ner.SearchFiles [-index dir] [-queries queries] [-ru] [-pdf]`
-
-    Пример:
-
-    `java org.ner.SearchFiles -index pdf -queries pdf -pdf`
-
-    Команда вернет список пар "категория - вес", отсортированный по весам.
-
-    Например, при запросе в виде кусочка статьи про Apache Cassandra и при корпусе вида `{big data, databases, image_processing, statistics}` результатом будет:
-
-        377 total matching documents
-        databases : 3.017130
-        big_data : 0.624801
-        image_processing : 0.478265
-        statistics : 0.074634
+    Информацию об этих функциях можете увидеть, запустив `java -jar NER.jar`

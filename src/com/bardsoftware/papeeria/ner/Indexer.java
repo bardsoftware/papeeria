@@ -28,9 +28,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 
-public class IndexFiles {
+public class Indexer {
 
-	private IndexFiles() {
+	private Indexer() {
 	}
 
 	public static void indexDocs(final IndexWriter writer, Path corpus) throws IOException {

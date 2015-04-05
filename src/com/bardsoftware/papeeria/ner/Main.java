@@ -23,7 +23,7 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Main {
 	public static void main(String[] args) {
-		String usage = "Usage:\tjava com.bardsoftware.papeeria.ner.Main <command> [-options]\n\n"
+		String usage = "Usage:\tjava com.bardsoftware.papeeria.ner.Main <command> [-options]\n"
 				+ "Commands:\n"
 				+ "\tindex\n"
 				+ "\t\tOptions: [-docs DOCS_PATH] [-index INDEX_PATH] [-update]\n"
@@ -35,6 +35,10 @@ public class Main {
 				+ "Common options:\n"
 				+ "\t [-ru]"
 				+ "\t\t Enables indexing (or searching) with russian language analyzer";
+		if (args.length == 0) {
+			System.out.println(usage);
+			System.exit(1);
+		}
 		switch (args[0]) {
 			case "search":
 				search(args);
@@ -96,7 +100,7 @@ public class Main {
 			// iwc.setRAMBufferSizeMB(256.0);
 
 			IndexWriter writer = new IndexWriter(dir, iwc);
-			IndexFiles.indexDocs(writer, docDir);
+			Indexer.indexDocs(writer, docDir);
 
 			// NOTE: if you want to maximize search performance,
 			// you can optionally call forceMerge here.  This can be
