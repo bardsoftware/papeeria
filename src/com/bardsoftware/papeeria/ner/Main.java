@@ -103,8 +103,8 @@ public class Main {
 			// a terribly costly operation, so generally it's only
 			// worth it when your index is relatively static (ie
 			// you're done adding documents to it):
-			//
-			// writer.forceMerge(1);
+
+			writer.forceMerge(1);
 
 			writer.close();
 

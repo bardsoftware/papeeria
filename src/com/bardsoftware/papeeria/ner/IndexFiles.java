@@ -33,15 +33,7 @@ public class IndexFiles {
 	private IndexFiles() {
 	}
 
-	/**
-	 * Indexes the given file using the given writer, or if a directory is given,
-	 * recurses over files and directories found under the given directory.
-	 *
-	 * @param writer Writer to the index where the given file/dir info will be stored
-	 * @param corpus Path to corpus
-	 * @throws IOException If there is a low-level I/O error
-	 */
-	static void indexDocs(final IndexWriter writer, Path corpus) throws IOException {
+	public static void indexDocs(final IndexWriter writer, Path corpus) throws IOException {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(corpus)) {
 			for (Path category : directoryStream) {
 				try (BufferedReader index = Files.newBufferedReader(category.resolve("index"), StandardCharsets.UTF_8)) {
@@ -64,17 +56,11 @@ public class IndexFiles {
 		}
 	}
 
-	/**
-	 * Just a utility method to remove first word from string
-	 */
-	static String removeFirstWord(String str) {
+	private static String removeFirstWord(String str) {
 		return str.split(" ", 2)[1];
 	}
 
-	/**
-	 * Indexes a single document
-	 */
-	static void indexDoc(IndexWriter writer, Path file, String title) throws IOException {
+	public static void indexDoc(IndexWriter writer, Path file, String title) throws IOException {
 		try (InputStream stream = Files.newInputStream(file)) {
 			Document doc = new Document();
 
