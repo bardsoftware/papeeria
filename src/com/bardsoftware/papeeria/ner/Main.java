@@ -23,7 +23,7 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Main {
 	public static void main(String[] args) {
-		String usage = "Usage:\tclassificator <command> [-options]\n"
+		String usage = "Usage:\tclassifier <command> [-options]\n"
 				+ "Commands:\n"
 				+ "\tindex\n"
 				+ "\t\tOptions: [-docs DOCS_PATH] [-index INDEX_PATH] [-update]\n"
