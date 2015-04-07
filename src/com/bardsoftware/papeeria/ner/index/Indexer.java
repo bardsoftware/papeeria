@@ -37,8 +37,7 @@ public class Indexer {
 								try {
 									String title = StringUtils.removeFirstWord(index.readLine());
 									indexDoc(writer, file, title);
-								} catch (IOException ignore) {
-									// don't index files that can't be read.
+								} catch (IOException ignored) {
 								}
 							}
 							return FileVisitResult.CONTINUE;
