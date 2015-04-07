@@ -1,4 +1,6 @@
-# CSC_NER
+# CSC articles classification
+
+Прототип, определяющий тему статьи с помощью категорий википедии и векторного поиска.
 
 ### Инструкция по запуску
 1. [Собрать](https://docs.docker.com/reference/builder/) docker образ из [Dockerfile](https://raw.githubusercontent.com/bardsoftware/papeeria/named_entity_recognition/build/Dockerfile)'a.
