@@ -38,8 +38,8 @@ public class Main {
 				+ "\t\t-pdf: searches with pdf as query for every pdf in directory\n"
 				+ "Common options:\n"
 				+ "\t-ru\n"
-				+ "\t\t Enables indexing (or searching) with russian language analyzer."
-				+ "\t\t Standard (i.e. english) analyzer is used as default.";
+				+ "\t\tEnables indexing (or searching) with russian language analyzer.\n"
+				+ "\t\tStandard (i.e. english) analyzer is used as default.";
 		if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
 			System.out.println(usage);
 			System.exit(1);
