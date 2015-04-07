@@ -1,6 +1,6 @@
-package com.bardsoftware.papeeria.ner.index;
+package com.bardsoftware.papeeria.topic_modeling.index;
 
-import com.bardsoftware.papeeria.ner.util.StringUtils;
+import com.bardsoftware.papeeria.topic_modeling.util.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;

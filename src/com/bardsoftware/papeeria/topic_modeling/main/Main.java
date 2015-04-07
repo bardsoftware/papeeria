@@ -1,4 +1,4 @@
-package com.bardsoftware.papeeria.ner.main;
+package com.bardsoftware.papeeria.topic_modeling.main;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -6,11 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.List;
 
-import com.bardsoftware.papeeria.ner.index.Indexer;
-import com.bardsoftware.papeeria.ner.search.CategoryWeightPair;
-import com.bardsoftware.papeeria.ner.search.Searcher;
+import com.bardsoftware.papeeria.topic_modeling.index.Indexer;
+import com.bardsoftware.papeeria.topic_modeling.search.CategoryWeightPair;
+import com.bardsoftware.papeeria.topic_modeling.search.Searcher;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;

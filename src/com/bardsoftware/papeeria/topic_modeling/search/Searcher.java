@@ -1,4 +1,4 @@
-package com.bardsoftware.papeeria.ner.search;
+package com.bardsoftware.papeeria.topic_modeling.search;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.bardsoftware.papeeria.ner.util.MapUtils;
-import com.bardsoftware.papeeria.ner.util.StringUtils;
+import com.bardsoftware.papeeria.topic_modeling.util.MapUtils;
+import com.bardsoftware.papeeria.topic_modeling.util.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;

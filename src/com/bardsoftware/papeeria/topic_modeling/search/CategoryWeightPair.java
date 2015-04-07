@@ -1,4 +1,4 @@
-package com.bardsoftware.papeeria.ner.search;
+package com.bardsoftware.papeeria.topic_modeling.search;
 
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;

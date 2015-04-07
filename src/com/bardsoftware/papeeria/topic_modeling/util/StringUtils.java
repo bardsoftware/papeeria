@@ -1,4 +1,4 @@
-package com.bardsoftware.papeeria.ner.util;
+package com.bardsoftware.papeeria.topic_modeling.util;
 
 public class StringUtils {
 	public static String removeNonAlphanumeric(String s) {
