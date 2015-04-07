@@ -1,2 +1,0 @@
-alias crawl="python3.4 /data/papeeria/src/wiki_crawler.py"
-alias classifier="java -jar /data/papeeria/jar/NER.jar"
