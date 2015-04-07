@@ -23,19 +23,24 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Main {
 	public static void main(String[] args) {
-		String usage = "Usage:\tjava com.bardsoftware.papeeria.ner.Main <command> [-options]\n"
+		String usage = "Usage:\tclassificator <command> [-options]\n"
 				+ "Commands:\n"
 				+ "\tindex\n"
 				+ "\t\tOptions: [-docs DOCS_PATH] [-index INDEX_PATH] [-update]\n"
+				+ "\t\t-docs: specify path to corpus. 'corpus' directory is used as default\n"
+				+ "\t\t-index: specify path to index. 'index' directory is used as default\n"
+				+ "\t\t-update: does not erase existing corpus - just appends new documents\n"
 				+ "\tsearch\n"
-				+ "\t\tOptions: [-index INDEX_PATH] [-query QUERY_PATH] [-pdf PDF_DIR_PATH]\n"
-				+ "\t\tIf -query, searches with txt file as query\n"
-				+ "\t\tIf -pdf, searches with pdf as query for every pdf in directory\n"
-				+ "\t\tIf PDF_DIR_PATH is omitted, 'pdf' dir is used as default\n"
+				+ "\t\tOptions: [-index INDEX_PATH] QUERY_PATH [-pdf PDF_DIR_PATH]\n"
+				+ "\t\t-index: specify path to index. 'index' directory is used as default\n"
+				+ "\t\tQUERY_PATH: path to query txt file or directory (if -pdf)."
+				+ " Default value is 'pdf' directory (if -pdf) and 'query.txt' otherwise\n"
+				+ "\t\t-pdf: searches with pdf as query for every pdf in directory\n"
 				+ "Common options:\n"
-				+ "\t [-ru]"
-				+ "\t\t Enables indexing (or searching) with russian language analyzer";
-		if (args.length == 0) {
+				+ "\t-ru\n"
+				+ "\t\t Enables indexing (or searching) with russian language analyzer."
+				+ "\t\t Standard (i.e. english) analyzer is used as default.";
+		if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
 			System.out.println(usage);
 			System.exit(1);
 		}
@@ -51,13 +56,68 @@ public class Main {
 		}
 	}
 
+	private static void search(String[] args) {
+		String index = "index";
+		String path = "query.txt";
+		boolean pdf = false;
+		boolean ru = false;
+
+
+		for (int i = 1; i < args.length; i++) {
+			if ("-index".equals(args[i])) {
+				index = args[++i];
+			} else if ("-pdf".equals(args[i])) {
+				pdf = true;
+			} else if ("-ru".equals(args[i])) {
+				ru = true;
+			} else if (i == 1) {
+				path = args[i];
+			}
+		}
+
+		if (pdf && path.equals("query.txt")) {
+			path = "pdf";
+		}
+
+		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
+			IndexSearcher searcher = new IndexSearcher(reader);
+			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
+
+			if (pdf) {
+				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
+					for (Path pathToPDF : directoryStream) {
+						System.out.println(pathToPDF.getFileName());
+						try {
+							toStdOut(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
+						} catch (ParseException e) {
+							System.out.println("unable to parse this pdf file");
+						}
+						System.out.println("__________________________________\n");
+					}
+				} catch (IOException e) {
+					System.err.println("wrong pdf dir: " + path);
+				}
+			} else {
+				try {
+					toStdOut(Searcher.searchByTxt(Paths.get(path), searcher, analyzer));
+				} catch (IOException e) {
+					System.err.println("wrong query path: " + path);
+				}
+			}
+		} catch (IOException e) {
+			System.err.println("wrong index dir: " + index);
+			e.printStackTrace();
+		} catch (ParseException ignored) {
+		}
+	}
+
 	private static void index(String[] args) {
 		String indexPath = "index";
 		String docsPath = "corpus";
 		boolean create = true;
 		boolean ru = false;
 
-		for (int i = 0; i < args.length; i++) {
+		for (int i = 1; i < args.length; i++) {
 			if ("-index".equals(args[i])) {
 				indexPath = args[i + 1];
 				i++;
@@ -107,7 +167,6 @@ public class Main {
 			// a terribly costly operation, so generally it's only
 			// worth it when your index is relatively static (ie
 			// you're done adding documents to it):
-
 			writer.forceMerge(1);
 
 			writer.close();
@@ -121,53 +180,7 @@ public class Main {
 		}
 	}
 
-	private static void search(String[] args) {
-		String index = "index";
-		String query = null;
-		String pdfs = "pdf";
-		boolean ru = false;
-
-
-		for (int i = 1; i < args.length; i++) {
-			if ("-index".equals(args[i])) {
-				index = args[++i];
-			} else if ("-query".equals(args[i])) {
-				query = args[++i];
-			} else if ("-pdf".equals(args[i])) {
-				pdfs = args[++i];
-			} else if ("-ru".equals(args[i])) {
-				ru = true;
-			}
-		}
-
-		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
-			IndexSearcher searcher = new IndexSearcher(reader);
-			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
-
-			if (query != null) {
-				toString(Searcher.searchByTxt(Paths.get(query), searcher, analyzer));
-			} else {
-				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(pdfs))) {
-					for (Path pathToPDF : directoryStream) {
-						System.out.println(pathToPDF.getFileName());
-						try {
-							toString(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
-						} catch (ParseException e) {
-							System.out.println("unable to parse this pdf file");
-						}
-						System.out.println("__________________________________\n");
-					}
-				} catch (IOException e) {
-					System.err.println("wrong pdfs dir");
-				}
-			}
-		} catch (IOException e) {
-			System.err.println("wrong index dir");
-		} catch (ParseException ignored) {
-		}
-	}
-
-	private static void toString(List<CategoryWeightPair> sorted) {
+	private static void toStdOut(List<CategoryWeightPair> sorted) {
 		sorted.forEach(System.out::println);
 		System.out.println("\nClustering result:");
 		Searcher.cluster(sorted).forEach(System.out::println);
