@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class MapUtils {
 
-	public static void addToMap(Map<String, Float> mapToAddIn, String keyToAdd, Float valueToAdd) {
+	public static <K> void addToMap(Map<K, Float> mapToAddIn, K keyToAdd, Float valueToAdd) {
 		if (mapToAddIn.containsKey(keyToAdd)) {
 			mapToAddIn.put(keyToAdd, mapToAddIn.get(keyToAdd) + valueToAdd);
 		} else {
@@ -12,8 +12,8 @@ public class MapUtils {
 		}
 	}
 
-	public static void mergeTwoMaps(Map<String, Float> toMergeIn, Map<String, Float> toBeMerged) {
-		for (Map.Entry<String, Float> entry : toBeMerged.entrySet()) {
+	public static <K> void mergeTwoMaps(Map<K, Float> toMergeIn, Map<K, Float> toBeMerged) {
+		for (Map.Entry<K, Float> entry : toBeMerged.entrySet()) {
 			addToMap(toMergeIn, entry.getKey(), entry.getValue());
 		}
 	}
