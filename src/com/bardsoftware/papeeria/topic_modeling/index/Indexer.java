@@ -26,7 +26,7 @@ public class Indexer {
 	private Indexer() {
 	}
 
-	public static void indexDocs(final IndexWriter writer, Path corpus) throws IOException {
+	public static void indexDocs(IndexWriter writer, Path corpus) throws IOException {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(corpus)) {
 			for (Path categoryDir : directoryStream) {
 				try (BufferedReader index = Files.newBufferedReader(categoryDir.resolve("index"), StandardCharsets.UTF_8)) {
@@ -37,7 +37,8 @@ public class Indexer {
 								try {
 									String title = StringUtils.removeFirstWord(index.readLine());
 									indexDoc(writer, file, title);
-								} catch (IOException ignored) {
+								} catch (IOException e) {
+									System.err.printf("unable to index a '%s' file", file.getFileName());
 								}
 							}
 							return FileVisitResult.CONTINUE;

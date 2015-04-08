@@ -24,6 +24,19 @@ import org.apache.lucene.store.FSDirectory;
 
 
 public class Main {
+
+	public static final String DEFAULT_CORPUS_PATH = "corpus";
+	public static final String DEFAULT_INDEX_PATH = "index";
+	public static final String DEFAULT_PDF_DIR_PATH = "pdf";
+	public static final String DEFAULT_QUERY_FILE_PATH = "query.txt";
+	public static final String DELIMITER = "____________________________________\n";
+	public static final String INDEX_COMMAND = "index";
+	public static final String SEARCH_COMMAND = "search";
+	public static final String WRONG_COMMAND_MESSAGE = "Wrong command";
+	public static final String WRONG_INDEX_PATH_MESSAGE = "wrong index path: ";
+	public static final String WRONG_QUERY_PATH_MESSAGE = "wrong query path: ";
+	public static final String UNABLE_TO_PARSE_MESSAGE = "unable to parse the file";
+
 	public static void main(String[] args) {
 		String usage = "Usage:\tclassifier <command> [-options]\n"
 				+ "Commands:\n"
@@ -32,11 +45,11 @@ public class Main {
 				+ "\t\t-docs: specify path to corpus. 'corpus' directory is used as default\n"
 				+ "\t\t-index: specify path to index. 'index' directory is used as default\n"
 				+ "\t\t-update: does not erase existing corpus - just appends new documents\n"
-				+ "\tsearch\n"
-				+ "\t\tOptions: [-index INDEX_PATH] QUERY_PATH [-pdf PDF_DIR_PATH]\n"
+				+ "\tsearch QUERY_PATH\n"
+				+ "\t\tOptions: [-index INDEX_PATH]\n"
 				+ "\t\t-index: specify path to index. 'index' directory is used as default\n"
-				+ "\t\tQUERY_PATH: path to query txt file or directory (if -pdf)."
-				+ " Default value is 'pdf' directory (if -pdf) and 'query.txt' otherwise\n"
+				+ "\t\tQUERY_PATH: path to query txt file (or directory if -pdf is used)."
+				+ " Default value is 'pdf' directory if -pdf is used and 'query.txt' otherwise\n"
 				+ "\t\t-pdf: searches with pdf as query for every pdf in directory\n"
 				+ "Common options:\n"
 				+ "\t-ru\n"
@@ -47,20 +60,21 @@ public class Main {
 			System.exit(1);
 		}
 		switch (args[0]) {
-			case "search":
-				search(args);
-				break;
-			case "index":
+			case INDEX_COMMAND:
 				index(args);
 				break;
+			case SEARCH_COMMAND:
+				search(args);
+				break;
 			default:
+				System.out.println(WRONG_COMMAND_MESSAGE);
 				System.out.println(usage);
 		}
 	}
 
 	private static void search(String[] args) {
-		String index = "index";
-		String path = "query.txt";
+		String index = DEFAULT_INDEX_PATH;
+		String path = DEFAULT_QUERY_FILE_PATH;
 		boolean pdf = false;
 		boolean ru = false;
 
@@ -77,13 +91,14 @@ public class Main {
 			}
 		}
 
-		if (pdf && path.equals("query.txt")) {
-			path = "pdf";
+		if (pdf && path.equals(DEFAULT_QUERY_FILE_PATH)) {
+			path = DEFAULT_PDF_DIR_PATH;
 		}
 
+		Date start = new Date();
 		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
 			IndexSearcher searcher = new IndexSearcher(reader);
-			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
+			Analyzer analyzer = getAnalyzer(ru);
 
 			if (pdf) {
 				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
@@ -92,30 +107,32 @@ public class Main {
 						try {
 							CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
 						} catch (ParseException e) {
-							System.out.println("unable to parse this pdf file");
+							System.out.println(UNABLE_TO_PARSE_MESSAGE);
 						}
-						System.out.println("__________________________________\n");
+						System.out.println(DELIMITER);
 					}
 				} catch (IOException e) {
-					System.err.println("wrong pdf dir: " + path);
+					System.out.println(WRONG_QUERY_PATH_MESSAGE + path);
 				}
 			} else {
 				try {
 					CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByTxt(Paths.get(path), searcher, analyzer));
 				} catch (IOException e) {
-					System.err.println("wrong query path: " + path);
+					System.out.println(WRONG_QUERY_PATH_MESSAGE + path);
+				} catch (ParseException e) {
+					System.out.println(UNABLE_TO_PARSE_MESSAGE);
 				}
 			}
+			Date end = new Date();
+			System.out.println((end.getTime() - start.getTime()) * 1e-3 + " total seconds");
 		} catch (IOException e) {
-			System.err.println("wrong index dir: " + index);
-			e.printStackTrace();
-		} catch (ParseException ignored) {
+			System.out.println(WRONG_INDEX_PATH_MESSAGE + index);
 		}
 	}
 
 	private static void index(String[] args) {
-		String indexPath = "index";
-		String docsPath = "corpus";
+		String indexPath = DEFAULT_INDEX_PATH;
+		String docsPath = DEFAULT_CORPUS_PATH;
 		boolean create = true;
 		boolean ru = false;
 
@@ -133,7 +150,7 @@ public class Main {
 			}
 		}
 
-		final Path docDir = Paths.get(docsPath);
+		Path docDir = Paths.get(docsPath);
 		if (!Files.isReadable(docDir)) {
 			System.out.println("Document directory '" + docDir.toAbsolutePath() +
 					"' does not exist or is not readable, please check the path");
@@ -145,7 +162,7 @@ public class Main {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
 			Directory dir = FSDirectory.open(Paths.get(indexPath));
-			Analyzer analyzer =  ru ? new RussianAnalyzer() : new StandardAnalyzer();
+			Analyzer analyzer = getAnalyzer(ru);
 			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 			if (create) {
@@ -154,21 +171,9 @@ public class Main {
 				iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			}
 
-			// Optional: for better indexing performance, if you
-			// are indexing many documents, increase the RAM
-			// buffer.  But if you do this, increase the max heap
-			// size to the JVM (eg add -Xmx512m or -Xmx1g):
-			//
-			// iwc.setRAMBufferSizeMB(256.0);
-
 			IndexWriter writer = new IndexWriter(dir, iwc);
 			Indexer.indexDocs(writer, docDir);
 
-			// NOTE: if you want to maximize search performance,
-			// you can optionally call forceMerge here.  This can be
-			// a terribly costly operation, so generally it's only
-			// worth it when your index is relatively static (ie
-			// you're done adding documents to it):
 			writer.forceMerge(1);
 
 			writer.close();
@@ -180,5 +185,9 @@ public class Main {
 			System.out.println(" caught a " + e.getClass() +
 					"\n with message: " + e.getMessage());
 		}
+	}
+
+	private static Analyzer getAnalyzer(boolean ru) {
+		return ru ? new RussianAnalyzer() : new StandardAnalyzer();
 	}
 }
