@@ -38,7 +38,7 @@ public class Main {
 	public static final String UNABLE_TO_PARSE_MESSAGE = "unable to parse the file";
 
 	public static void main(String[] args) {
-		String usage = "Usage:\tclassifier <command> [-options]\n"
+		final String usage = "Usage:\tclassifier <command> [-options]\n"
 				+ "Commands:\n"
 				+ "\tindex\n"
 				+ "\t\tOptions: [-docs DOCS_PATH] [-index INDEX_PATH] [-update]\n"
@@ -95,10 +95,10 @@ public class Main {
 			path = DEFAULT_PDF_DIR_PATH;
 		}
 
-		Date start = new Date();
+		final Date start = new Date();
 		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
-			IndexSearcher searcher = new IndexSearcher(reader);
-			Analyzer analyzer = getAnalyzer(ru);
+			final IndexSearcher searcher = new IndexSearcher(reader);
+			final Analyzer analyzer = getAnalyzer(ru);
 
 			if (pdf) {
 				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
@@ -123,7 +123,7 @@ public class Main {
 					System.out.println(UNABLE_TO_PARSE_MESSAGE);
 				}
 			}
-			Date end = new Date();
+			final Date end = new Date();
 			System.out.println((end.getTime() - start.getTime()) * 1e-3 + " total seconds");
 		} catch (IOException e) {
 			System.out.println(WRONG_INDEX_PATH_MESSAGE + index);
@@ -150,20 +150,20 @@ public class Main {
 			}
 		}
 
-		Path docDir = Paths.get(docsPath);
+		final Path docDir = Paths.get(docsPath);
 		if (!Files.isReadable(docDir)) {
 			System.out.println("Document directory '" + docDir.toAbsolutePath() +
 					"' does not exist or is not readable, please check the path");
 			System.exit(1);
 		}
 
-		Date start = new Date();
+		final Date start = new Date();
 		try {
 			System.out.println("Indexing to directory '" + indexPath + "'...");
 
-			Directory dir = FSDirectory.open(Paths.get(indexPath));
-			Analyzer analyzer = getAnalyzer(ru);
-			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+			final Directory dir = FSDirectory.open(Paths.get(indexPath));
+			final Analyzer analyzer = getAnalyzer(ru);
+			final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 			if (create) {
 				iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -171,14 +171,14 @@ public class Main {
 				iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			}
 
-			IndexWriter writer = new IndexWriter(dir, iwc);
+			final IndexWriter writer = new IndexWriter(dir, iwc);
 			Indexer.indexDocs(writer, docDir);
 
 			writer.forceMerge(1);
 
 			writer.close();
 
-			Date end = new Date();
+			final Date end = new Date();
 			System.out.println((end.getTime() - start.getTime()) * 1e-3 + " total seconds");
 
 		} catch (IOException e) {

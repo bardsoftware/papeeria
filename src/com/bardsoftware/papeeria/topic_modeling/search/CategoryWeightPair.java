@@ -35,7 +35,7 @@ public class CategoryWeightPair implements Clusterable, Comparable<CategoryWeigh
 		if (this == o) return true;
 		if (!(o instanceof CategoryWeightPair)) return false;
 
-		CategoryWeightPair that = (CategoryWeightPair) o;
+		final CategoryWeightPair that = (CategoryWeightPair) o;
 
 		if (category != null ? !category.equals(that.category) : that.category != null) return false;
 		if (weight != null ? !weight.equals(that.weight) : that.weight != null) return false;
@@ -56,7 +56,7 @@ public class CategoryWeightPair implements Clusterable, Comparable<CategoryWeigh
 	}
 
 	public static List<CategoryWeightPair> sortByWeights(Map<String, Float> categoriesIntoWeights) {
-		List<CategoryWeightPair> storage = new ArrayList<>();
+		final List<CategoryWeightPair> storage = new ArrayList<>();
 		for (Map.Entry<String, Float> entry : categoriesIntoWeights.entrySet()) {
 			storage.add(new CategoryWeightPair(entry));
 		}
@@ -66,9 +66,9 @@ public class CategoryWeightPair implements Clusterable, Comparable<CategoryWeigh
 
 
 	public static List<CategoryWeightPair> cluster(List<CategoryWeightPair> searchResult) {
-		KMeansPlusPlusClusterer<CategoryWeightPair> clusterer = new KMeansPlusPlusClusterer<>(NUMBER_OF_CLUSTERS, 1000);
-		List<CentroidCluster<CategoryWeightPair>> clusterResults = clusterer.cluster(searchResult);
-		CentroidCluster<CategoryWeightPair> maxCluster = Collections.max(clusterResults, (c1, c2) ->
+		final KMeansPlusPlusClusterer<CategoryWeightPair> clusterer = new KMeansPlusPlusClusterer<>(NUMBER_OF_CLUSTERS, 1000);
+		final List<CentroidCluster<CategoryWeightPair>> clusterResults = clusterer.cluster(searchResult);
+		final CentroidCluster<CategoryWeightPair> maxCluster = Collections.max(clusterResults, (c1, c2) ->
 						Double.compare(c1.getCenter().getPoint()[0], c2.getCenter().getPoint()[0])
 		);
 		return maxCluster.getPoints();

@@ -35,7 +35,7 @@ public class Indexer {
 						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 							if (!file.getFileName().toString().equals("index")) {
 								try {
-									String title = StringUtils.removeFirstWord(index.readLine());
+									final String title = StringUtils.removeFirstWord(index.readLine());
 									indexDoc(writer, file, title);
 								} catch (IOException e) {
 									System.err.printf("unable to index a '%s' file", file.getFileName());
@@ -52,9 +52,9 @@ public class Indexer {
 
 	public static void indexDoc(IndexWriter writer, Path file, String title) throws IOException {
 		try (InputStream stream = Files.newInputStream(file)) {
-			Document doc = new Document();
+			final Document doc = new Document();
 
-			Field pathField = new StringField("path", file.toString(), Field.Store.YES);
+			final Field pathField = new StringField("path", file.toString(), Field.Store.YES);
 			doc.add(pathField);
 
 			doc.add(new StringField("category", file.getParent().getFileName().toString(), Field.Store.YES));
