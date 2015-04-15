@@ -23,7 +23,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 
-public class Main {
+public final class Main {
 
 	public static final String DEFAULT_CORPUS_PATH = "corpus";
 	public static final String DEFAULT_INDEX_PATH = "index";

@@ -19,7 +19,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
 
-public class Searcher {
+public final class Searcher {
 	private static final int CHUNK_LENGTH = 5_000;
 	private static final int HITS_PER_PAGE = 50;
 

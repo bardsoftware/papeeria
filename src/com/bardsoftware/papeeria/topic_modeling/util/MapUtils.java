@@ -2,7 +2,10 @@ package com.bardsoftware.papeeria.topic_modeling.util;
 
 import java.util.Map;
 
-public class MapUtils {
+public final class MapUtils {
+
+	private MapUtils() {
+	}
 
 	public static <K> void addToMap(Map<K, Float> mapToAddIn, K keyToAdd, Float valueToAdd) {
 		if (mapToAddIn.containsKey(keyToAdd)) {

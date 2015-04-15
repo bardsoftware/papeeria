@@ -1,6 +1,10 @@
 package com.bardsoftware.papeeria.topic_modeling.util;
 
-public class StringUtils {
+public final class StringUtils {
+
+	private StringUtils() {
+	}
+
 	public static String removeNonAlphanumeric(String s) {
 		return s.replaceAll("[^\\p{L}\\p{Nd}]+", " ");
 	}
@@ -12,5 +16,4 @@ public class StringUtils {
 	public static String removeFirstWord(String str) {
 		return str.split(" ", 2)[1];
 	}
-
 }
