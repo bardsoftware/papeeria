@@ -34,6 +34,7 @@ public final class Main {
 	public static final String SEARCH_COMMAND = "search";
 	public static final String WRONG_COMMAND_MESSAGE = "Wrong command";
 	public static final String WRONG_INDEX_PATH_MESSAGE = "wrong index path: ";
+	public static final String WRONG_CORPUS_PATH_MESSAGE = "wrong corpus path: ";
 	public static final String WRONG_QUERY_PATH_MESSAGE = "wrong query path: ";
 	public static final String UNABLE_TO_PARSE_MESSAGE = "unable to parse the file";
 
@@ -73,60 +74,69 @@ public final class Main {
 	}
 
 	private static void search(String[] args) {
-		String index = DEFAULT_INDEX_PATH;
-		String path = DEFAULT_QUERY_FILE_PATH;
+		String stringIndexPath = DEFAULT_INDEX_PATH;
+		String stringQueryPath = DEFAULT_QUERY_FILE_PATH;
 		boolean pdf = false;
 		boolean ru = false;
 
 
 		for (int i = 1; i < args.length; i++) {
 			if ("-index".equals(args[i])) {
-				index = args[++i];
+				stringIndexPath = args[++i];
 			} else if ("-pdf".equals(args[i])) {
 				pdf = true;
 			} else if ("-ru".equals(args[i])) {
 				ru = true;
 			} else if (i == 1) {
-				path = args[i];
+				stringQueryPath = args[i];
 			}
 		}
 
-		if (pdf && path.equals(DEFAULT_QUERY_FILE_PATH)) {
-			path = DEFAULT_PDF_DIR_PATH;
+		if (pdf && stringQueryPath.equals(DEFAULT_QUERY_FILE_PATH)) {
+			stringQueryPath = DEFAULT_PDF_DIR_PATH;
 		}
 
+		final Path queryPath = Paths.get(stringQueryPath), indexPath = Paths.get(stringIndexPath);
 		final Date start = new Date();
-		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)))) {
+		try (IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath))) {
 			final IndexSearcher searcher = new IndexSearcher(reader);
 			final Analyzer analyzer = getAnalyzer(ru);
 
 			if (pdf) {
-				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
-					for (Path pathToPDF : directoryStream) {
-						System.out.println(pathToPDF.getFileName());
-						try {
-							CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
-						} catch (ParseException e) {
-							System.out.println(UNABLE_TO_PARSE_MESSAGE);
-						}
-						System.out.println(DELIMITER);
-					}
-				} catch (IOException e) {
-					System.out.println(WRONG_QUERY_PATH_MESSAGE + path);
-				}
+				searchPDFs(queryPath, searcher, analyzer);
 			} else {
-				try {
-					CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByTxt(Paths.get(path), searcher, analyzer));
-				} catch (IOException e) {
-					System.out.println(WRONG_QUERY_PATH_MESSAGE + path);
-				} catch (ParseException e) {
-					System.out.println(UNABLE_TO_PARSE_MESSAGE);
-				}
+				searchTxtFile(queryPath, searcher, analyzer);
 			}
 			final Date end = new Date();
 			System.out.println((end.getTime() - start.getTime()) * 1e-3 + " total seconds");
 		} catch (IOException e) {
-			System.out.println(WRONG_INDEX_PATH_MESSAGE + index);
+			System.out.println(WRONG_INDEX_PATH_MESSAGE + stringIndexPath);
+		}
+	}
+
+	private static void searchPDFs(Path pathToDir, IndexSearcher searcher, Analyzer analyzer) {
+		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(pathToDir)) {
+			for (Path pathToPDF : directoryStream) {
+				System.out.println(pathToPDF.getFileName());
+				try {
+					CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
+				} catch (ParseException e) {
+					System.out.println(UNABLE_TO_PARSE_MESSAGE);
+				}
+				System.out.println(DELIMITER);
+			}
+		} catch (IOException e) {
+			System.out.println(WRONG_QUERY_PATH_MESSAGE + pathToDir);
+		}
+	}
+
+	private static void searchTxtFile(Path pathToFile, IndexSearcher searcher, Analyzer analyzer) {
+		try {
+			CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByTxt(pathToFile, searcher, analyzer));
+		} catch (IOException e) {
+			System.out.println(WRONG_QUERY_PATH_MESSAGE + pathToFile);
+		} catch (ParseException e) {
+			System.out.println(UNABLE_TO_PARSE_MESSAGE);
 		}
 	}
 
@@ -152,15 +162,12 @@ public final class Main {
 
 		final Path docDir = Paths.get(docsPath);
 		if (!Files.isReadable(docDir)) {
-			System.out.println("Document directory '" + docDir.toAbsolutePath() +
-					"' does not exist or is not readable, please check the path");
+			System.out.println(WRONG_CORPUS_PATH_MESSAGE + docDir);
 			System.exit(1);
 		}
 
 		final Date start = new Date();
 		try {
-			System.out.println("Indexing to directory '" + indexPath + "'...");
-
 			final Directory dir = FSDirectory.open(Paths.get(indexPath));
 			final Analyzer analyzer = getAnalyzer(ru);
 			final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
