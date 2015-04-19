@@ -22,21 +22,20 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
-
 public final class Main {
 
-	public static final String DEFAULT_CORPUS_PATH = "corpus";
-	public static final String DEFAULT_INDEX_PATH = "index";
-	public static final String DEFAULT_PDF_DIR_PATH = "pdf";
-	public static final String DEFAULT_QUERY_FILE_PATH = "query.txt";
-	public static final String DELIMITER = "____________________________________\n";
-	public static final String INDEX_COMMAND = "index";
-	public static final String SEARCH_COMMAND = "search";
-	public static final String WRONG_COMMAND_MESSAGE = "Wrong command";
-	public static final String WRONG_INDEX_PATH_MESSAGE = "wrong index path: ";
-	public static final String WRONG_CORPUS_PATH_MESSAGE = "wrong corpus path: ";
-	public static final String WRONG_QUERY_PATH_MESSAGE = "wrong query path: ";
-	public static final String UNABLE_TO_PARSE_MESSAGE = "unable to parse the file";
+	private static final String DEFAULT_CORPUS_PATH = "corpus";
+	private static final String DEFAULT_INDEX_PATH = "index";
+	private static final String DEFAULT_PDF_DIR_PATH = "pdf";
+	private static final String DEFAULT_QUERY_FILE_PATH = "query.txt";
+	private static final String DELIMITER = "____________________________________\n";
+	private static final String INDEX_COMMAND = "index";
+	private static final String SEARCH_COMMAND = "search";
+	private static final String WRONG_COMMAND_MESSAGE = "Wrong command";
+	private static final String WRONG_INDEX_PATH_MESSAGE = "wrong index path: ";
+	private static final String WRONG_CORPUS_PATH_MESSAGE = "wrong corpus path: ";
+	private static final String WRONG_QUERY_PATH_MESSAGE = "wrong query path: ";
+	private static final String UNABLE_TO_PARSE_MESSAGE = "unable to parse the file";
 
 	public static void main(String[] args) {
 		final String usage = "Usage:\tclassifier <command> [-options]\n"
@@ -81,14 +80,21 @@ public final class Main {
 
 
 		for (int i = 1; i < args.length; i++) {
-			if ("-index".equals(args[i])) {
-				stringIndexPath = args[++i];
-			} else if ("-pdf".equals(args[i])) {
-				pdf = true;
-			} else if ("-ru".equals(args[i])) {
-				ru = true;
-			} else if (i == 1) {
-				stringQueryPath = args[i];
+			switch (args[i]) {
+				case "-index":
+					stringIndexPath = args[++i];
+					break;
+				case "-pdf":
+					pdf = true;
+					break;
+				case "-ru":
+					ru = true;
+					break;
+				default:
+					if (i == 1) {
+						stringQueryPath = args[i];
+					}
+					break;
 			}
 		}
 
@@ -107,6 +113,7 @@ public final class Main {
 			} else {
 				searchTxtFile(queryPath, searcher, analyzer);
 			}
+
 			final Date end = new Date();
 			System.out.println((end.getTime() - start.getTime()) * 1e-3 + " total seconds");
 		} catch (IOException e) {
@@ -147,22 +154,27 @@ public final class Main {
 		boolean ru = false;
 
 		for (int i = 1; i < args.length; i++) {
-			if ("-index".equals(args[i])) {
-				indexPath = args[i + 1];
-				i++;
-			} else if ("-docs".equals(args[i])) {
-				docsPath = args[i + 1];
-				i++;
-			} else if ("-update".equals(args[i])) {
-				create = false;
-			} else if ("-ru".equals(args[i])) {
-				ru = true;
+			switch (args[i]) {
+				case "-index":
+					indexPath = args[i + 1];
+					i++;
+					break;
+				case "-docs":
+					docsPath = args[i + 1];
+					i++;
+					break;
+				case "-update":
+					create = false;
+					break;
+				case "-ru":
+					ru = true;
+					break;
 			}
 		}
 
-		final Path docDir = Paths.get(docsPath);
-		if (!Files.isReadable(docDir)) {
-			System.out.println(WRONG_CORPUS_PATH_MESSAGE + docDir);
+		final Path documentsDirectory = Paths.get(docsPath);
+		if (!Files.isReadable(documentsDirectory)) {
+			System.out.println(WRONG_CORPUS_PATH_MESSAGE + documentsDirectory);
 			System.exit(1);
 		}
 
@@ -179,10 +191,9 @@ public final class Main {
 			}
 
 			final IndexWriter writer = new IndexWriter(dir, iwc);
-			Indexer.indexDocs(writer, docDir);
+			Indexer.indexDocs(writer, documentsDirectory);
 
 			writer.forceMerge(1);
-
 			writer.close();
 
 			final Date end = new Date();

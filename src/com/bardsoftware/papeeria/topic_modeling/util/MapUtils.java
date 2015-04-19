@@ -8,11 +8,7 @@ public final class MapUtils {
 	}
 
 	public static <K> void addToMap(Map<K, Float> mapToAddIn, K keyToAdd, Float valueToAdd) {
-		if (mapToAddIn.containsKey(keyToAdd)) {
-			mapToAddIn.put(keyToAdd, mapToAddIn.get(keyToAdd) + valueToAdd);
-		} else {
-			mapToAddIn.put(keyToAdd, valueToAdd);
-		}
+		mapToAddIn.put(keyToAdd, mapToAddIn.getOrDefault(keyToAdd, 0f) + valueToAdd);
 	}
 
 	public static <K> void mergeTwoMaps(Map<K, Float> toMergeIn, Map<? extends K, ? extends Float> toBeMerged) {
