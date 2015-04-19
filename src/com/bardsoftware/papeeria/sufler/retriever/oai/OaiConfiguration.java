@@ -1,3 +1,17 @@
+/*
+ Copyright 2015 BarD Software s.r.o
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
 package com.bardsoftware.papeeria.sufler.retriever.oai;
 
 import com.thoughtworks.xstream.XStream;
@@ -10,38 +24,38 @@ public class OaiConfiguration {
     private static final String CONFIGURATION_PATH = "resources/retriever/";
     private static final String CONFIGURATION_FILENAME = "oai_retrieve_config.xml";
 
-    private static OaiConfiguration instance;
+    private static OaiConfiguration ourInstance;
 
     public class Metadata {
         @XStreamAlias("prefix")
-        private String prefix;
+        private String myPrefix;
 
         @XStreamAlias("class")
-        private String clazz;
+        private String myClazz;
 
         public String getPrefix() {
-            return prefix;
+            return myPrefix;
         }
 
         public String getClazz() {
-            return clazz;
+            return myClazz;
         }
     }
 
     @XStreamAlias("url")
-    private String url;
+    private String myUrl;
 
     @XStreamAlias("path")
-    private String path;
+    private String myPath;
 
     @XStreamAlias("source")
-    private String source;
+    private String mySource;
 
     @XStreamAlias("metadata")
-    private Metadata metadata;
+    private Metadata myMetadata;
 
     @XStreamAlias("requestGap")
-    private long requestGap;
+    private long myRequestGap;
 
     public OaiConfiguration() {
 
@@ -51,36 +65,36 @@ public class OaiConfiguration {
         XStream xstream = new XStream();
         xstream.processAnnotations(OaiConfiguration.class);
         File file = new File(CONFIGURATION_PATH + CONFIGURATION_FILENAME);
-        instance = (OaiConfiguration) (xstream.fromXML(file));
+        ourInstance = (OaiConfiguration) (xstream.fromXML(file));
     }
 
     public static OaiConfiguration getInstance() {
-        if (instance == null) {
+        if (ourInstance == null) {
             readFromFile();
         }
-        return instance;
+        return ourInstance;
     }
 
     public String getUrl() {
-        return url;
+        return myUrl;
     }
 
     public String getPath() {
-        return path;
+        return myPath;
     }
 
     public String getSource() {
-        return source;
+        return mySource;
     }
 
     public Metadata getMetadata() {
-        return metadata;
+        return myMetadata;
     }
 
     /**
      * @return time between requests in seconds
      */
     public long getRequestGap() {
-        return requestGap;
+        return myRequestGap;
     }
 }

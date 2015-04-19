@@ -1,13 +1,16 @@
 
 package com.bardsoftware.papeeria.sufler.struct.oai;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * <p>Java class for ListRecordsType complex type.

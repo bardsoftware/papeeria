@@ -1,101 +1,112 @@
+/*
+ Copyright 2015 BarD Software s.r.o
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
 package com.bardsoftware.papeeria.sufler.retriever.oai;
 
+import com.bardsoftware.papeeria.sufler.retriever.Retriever;
+import com.bardsoftware.papeeria.sufler.struct.oai.OAIPMHtype;
+import com.google.common.base.Preconditions;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
-import com.bardsoftware.papeeria.sufler.retriever.Retriever;
-import com.bardsoftware.papeeria.sufler.struct.oai.OAIPMHtype;
 
-import javax.xml.bind.*;
-import java.io.*;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 
 public class OaiRetriever implements Retriever {
-    private static Logger logger = Logger.getLogger(OaiRetriever.class);
+    private static final Logger LOGGER = Logger.getLogger(OaiRetriever.class);
 
     private static final String VERB = "ListRecords";
 
-    private OaiConfiguration configuration;
+    private OaiConfiguration myConfiguration;
 
-    public OaiRetriever() {
-        configuration = OaiConfiguration.getInstance();
+    public OaiRetriever(OaiConfiguration configuration) {
+        myConfiguration = configuration;
+        Preconditions.checkNotNull(myConfiguration);
     }
 
     public void retrieve() {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
         boolean firstRequest = true;
         String resumptionToken = null;
         int requestNumber = 1;
 
-        try {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             while (resumptionToken != null || firstRequest) {
                 if (firstRequest) {
                     firstRequest = false;
                 }
-                logger.debug("Request #" + requestNumber);
+                LOGGER.debug("Request #" + requestNumber);
                 String uri = getUri(resumptionToken);
-                logger.debug("Uri=" + uri);
+                LOGGER.debug("Uri=" + uri);
                 HttpGet httpget = new HttpGet(uri);
-                CloseableHttpResponse response = httpClient.execute(httpget);
-                try {
+                try (CloseableHttpResponse response = httpClient.execute(httpget)) {
                     HttpEntity entity = response.getEntity();
                     InputStream is = entity.getContent();
                     File file = saveToFile(is, requestNumber);
                     resumptionToken = getResumptionToken(file);
-                    logger.debug("resumptionToken=" + resumptionToken);
+                    LOGGER.debug("resumptionToken=" + resumptionToken);
                 } finally {
                     httpget.releaseConnection();
                 }
                 requestNumber++;
-                Thread.sleep(configuration.getRequestGap() * 1000 + 5);
+                Thread.sleep(myConfiguration.getRequestGap() * 1000 + 5);
             }
         } catch (Exception ex) {
-            logger.error("Retrieve failed. Caught exception " + ex);
-        } finally {
-            try {
-                httpClient.close();
-            } catch (IOException ex) {
-
-            }
+            LOGGER.error("Retrieve failed. Caught exception " + ex);
         }
     }
 
     private String getUri(String resumptionToken) {
-        return configuration.getUrl() +
+        return myConfiguration.getUrl() +
                 "?verb=" + VERB +
                 ((resumptionToken == null) ?
-                        "&metadataPrefix=" + configuration.getMetadata().getPrefix()
-                        : "&resumptionToken=" + encode(resumptionToken));
+                        "&metadataPrefix=" + myConfiguration.getMetadata().getPrefix()
+                        : "&resumptionToken=" + encodeResumptionToken(resumptionToken));
     }
 
-    private String encode(String str) {
-        if (str == null)
-            return str;
+    private String encodeResumptionToken(String resumptionToken) {
+        Preconditions.checkNotNull(resumptionToken);
 
-        String result = str;
+        String result = resumptionToken;
         try {
-            if (str != null) {
-                result = URLEncoder.encode(str, "UTF-8");
-            }
+            result = URLEncoder.encode(resumptionToken, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
-            logger.error("Caught exception: " + ex.getMessage());
+            LOGGER.error("Caught exception: " + ex.getMessage());
         }
         return result;
     }
 
     private File saveToFile(InputStream is, int requestNumber) throws IOException {
-        File dir = new File(configuration.getPath() + configuration.getSource());
+        File dir = new File(myConfiguration.getPath() + myConfiguration.getSource());
         dir.mkdirs();
-        File file = new File(dir, configuration.getSource() + requestNumber + ".xml");
+        File file = new File(dir, myConfiguration.getSource() + requestNumber + ".xml");
         Files.copy(is, file.toPath());
         return file;
     }
 
-    private String getResumptionToken(File file) throws JAXBException {
+    private static String getResumptionToken(File file) throws JAXBException {
         String result = null;
         JAXBContext jc = JAXBContext.newInstance("com.bardsoftware.papeeria.sufler.struct.oai");
         Unmarshaller unmarshaller = jc.createUnmarshaller();
@@ -109,7 +120,8 @@ public class OaiRetriever implements Retriever {
     }
 
     public static void main(String[] args) {
-        Retriever retriever = new OaiRetriever();
+        OaiConfiguration configuration = OaiConfiguration.getInstance();
+        Retriever retriever = new OaiRetriever(configuration);
         retriever.retrieve();
     }
 }

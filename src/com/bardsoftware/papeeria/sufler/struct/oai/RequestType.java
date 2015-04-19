@@ -1,13 +1,11 @@
 
 package com.bardsoftware.papeeria.sufler.struct.oai;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlSchemaType;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.*;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * Define requestType, indicating the protocol request that

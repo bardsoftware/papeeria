@@ -6,6 +6,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * <p>Java class for GetRecordType complex type.

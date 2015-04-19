@@ -1,9 +1,23 @@
+/*
+ Copyright 2015 BarD Software s.r.o
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
 package com.bardsoftware.papeeria.sufler.searcher;
 
-import org.apache.log4j.Logger;
+import com.bardsoftware.papeeria.sufler.searcher.configuration.SearcherConfiguration;
+import com.google.common.base.Preconditions;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -20,35 +34,32 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Searcher {
-    protected Logger log = Logger.getLogger(Searcher.class);
+    private SearcherConfiguration myConfiguration;
 
-    private SearcherConfiguration configuration;
-    IndexReader reader;
-    IndexSearcher searcher;
-    QueryParser queryParser;
-    Query query;
+    private IndexReader myReader;
+    private IndexSearcher mySearcher;
+    private QueryParser myQueryParser;
 
-    public Searcher() throws IOException {
-        configuration = SearcherConfiguration.getInstance();
-        Path path = Paths.get(configuration.getIndexDirectory());
+    public Searcher(SearcherConfiguration configuration) throws IOException {
+        myConfiguration = configuration;
+        Preconditions.checkNotNull(myConfiguration);
+        Path path = Paths.get(myConfiguration.getIndexDirectory());
         Directory indexDirectory = FSDirectory.open(path);
-        reader = DirectoryReader.open(indexDirectory);
-        searcher = new IndexSearcher(reader);
-        queryParser = new QueryParser("description", new StandardAnalyzer());
+        myReader = DirectoryReader.open(indexDirectory);
+        mySearcher = new IndexSearcher(myReader);
+        myQueryParser = new QueryParser("description", new StandardAnalyzer());
     }
 
     public TopDocs search(String searchQuery) throws ParseException, IOException {
-
-        query = queryParser.parse(QueryParser.escape(searchQuery));
-        return searcher.search(query, configuration.getSize());
+        Query myQuery = myQueryParser.parse(QueryParser.escape(searchQuery));
+        return mySearcher.search(myQuery, myConfiguration.getSize());
     }
 
-    public Document getDocument(ScoreDoc scoreDoc)
-            throws CorruptIndexException, IOException {
-        return searcher.doc(scoreDoc.doc);
+    public Document getDocument(ScoreDoc scoreDoc) throws IOException {
+        return mySearcher.doc(scoreDoc.doc);
     }
 
     public void close() throws IOException {
-        reader.close();
+        myReader.close();
     }
 }

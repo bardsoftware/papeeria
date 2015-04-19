@@ -6,6 +6,6 @@
         <prefix>oai_dc</prefix>
         <class>com.bardsoftware.papeeria.sufler.retriever.oai.metadata.DublinCoreMetadata</class>
     </metadata>
-    <path>D:\CS\Projects\Prompter\resources\test\</path>
+    <path>resources\data\test\</path>
     <source>arXiv</source>
 </oaiConfiguration>

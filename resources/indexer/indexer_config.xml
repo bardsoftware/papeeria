@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <indexerConfiguration>
-    <indexPath>D:\CS\Projects\Prompter\resources\index\arXiv\test</indexPath>
-    <directory>D:\CS\Projects\Prompter\resources\test\arXiv</directory>
+    <indexPath>resources\data\index\test</indexPath>
+    <directory>resources\data\test\arXiv</directory>
 </indexerConfiguration>

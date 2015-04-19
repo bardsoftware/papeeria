@@ -1,11 +1,14 @@
 
 package com.bardsoftware.papeeria.sufler.struct.oai;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.*;
 import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * <p>Java class for OAI-PMHtype complex type.

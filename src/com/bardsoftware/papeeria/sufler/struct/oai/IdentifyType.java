@@ -1,14 +1,13 @@
 
 package com.bardsoftware.papeeria.sufler.struct.oai;
 
+import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSchemaType;
-import javax.xml.bind.annotation.XmlType;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * <p>Java class for IdentifyType complex type.

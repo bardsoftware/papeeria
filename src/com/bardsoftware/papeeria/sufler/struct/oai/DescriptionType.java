@@ -6,6 +6,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlType;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * The descriptionType is used for the description

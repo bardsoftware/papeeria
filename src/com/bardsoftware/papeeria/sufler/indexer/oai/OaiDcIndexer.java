@@ -1,13 +1,32 @@
-package com.bardsoftware.papeeria.sufler.indexer;
+/*
+ Copyright 2015 BarD Software s.r.o
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.w3c.dom.Node;
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+package com.bardsoftware.papeeria.sufler.indexer.oai;
+
+import com.bardsoftware.papeeria.sufler.indexer.IndexedField;
+import com.bardsoftware.papeeria.sufler.indexer.Indexer;
+import com.bardsoftware.papeeria.sufler.indexer.configuration.IndexerConfiguration;
+import com.bardsoftware.papeeria.sufler.indexer.configuration.IndexerConfigurationXml;
 import com.bardsoftware.papeeria.sufler.struct.oai.MetadataType;
 import com.bardsoftware.papeeria.sufler.struct.oai.OAIPMHtype;
 import com.bardsoftware.papeeria.sufler.struct.oai.RecordType;
 import com.bardsoftware.papeeria.sufler.struct.oai.dc.ElementType;
 import com.bardsoftware.papeeria.sufler.struct.oai.dc.OaiDcType;
+import org.apache.log4j.Logger;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.w3c.dom.Node;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -19,22 +38,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OaiDcIndexer extends Indexer {
-    private Map<String, IndexedField> fieldsMap;
+    private static final Logger LOGGER = Logger.getLogger(Indexer.class);
 
-    public OaiDcIndexer() {
-        fieldsMap = new HashMap<>();
-        fieldsMap.put("creator", IndexedField.CREATOR);
-        fieldsMap.put("title", IndexedField.TITLE);
-        fieldsMap.put("description", IndexedField.DESCRIPTION);
-        fieldsMap.put("identifier", IndexedField.IDENTIFIER);
-        fieldsMap.put("subject", IndexedField.SUBJECT);
-        fieldsMap.put("date", IndexedField.DATE);
+    private Map<String, IndexedField> myFieldsMap;
+
+    public OaiDcIndexer(IndexerConfiguration configuration) {
+        super(configuration);
+        myFieldsMap = new HashMap<>();
+        myFieldsMap.put("creator", IndexedField.CREATOR);
+        myFieldsMap.put("title", IndexedField.TITLE);
+        myFieldsMap.put("description", IndexedField.DESCRIPTION);
+        myFieldsMap.put("identifier", IndexedField.IDENTIFIER);
+        myFieldsMap.put("subject", IndexedField.SUBJECT);
+        myFieldsMap.put("date", IndexedField.DATE);
     }
 
     @Override
     protected void indexFile(File file) throws IOException {
         try {
-            logger.debug("Indexing file: " + file.getName());
+            LOGGER.debug("Indexing file: " + file.getName());
             JAXBContext jaxbContext = JAXBContext.newInstance("com.bardsoftware.papeeria.sufler.struct.oai");
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             OAIPMHtype oaiDoc = (OAIPMHtype) ((JAXBElement) unmarshaller.unmarshal(file)).getValue();
@@ -43,7 +65,7 @@ public class OaiDcIndexer extends Indexer {
                 indexRecord(record);
             }
         } catch (JAXBException e) {
-            logger.error("Error when indexing file " + file.getName(), e);
+            LOGGER.error("Error when indexing file " + file.getName(), e);
         }
 
     }
@@ -61,7 +83,7 @@ public class OaiDcIndexer extends Indexer {
             String name = element.getName().getLocalPart();
             String value = element.getValue().getValue().trim();
 
-            if (fieldsMap.containsKey(name)) {
+            if (myFieldsMap.containsKey(name)) {
                 field = createField(name, value);
             }
 
@@ -70,16 +92,17 @@ public class OaiDcIndexer extends Indexer {
             }
         }
 
-        writer.addDocument(document);
+        myWriter.addDocument(document);
     }
 
     private Field createField(String name, String value) {
-        IndexedField indexedField = fieldsMap.get(name);
+        IndexedField indexedField = myFieldsMap.get(name);
         return indexedField.createField(value);
     }
 
     public static void main(String[] args) throws IOException {
-        Indexer indexer = new OaiDcIndexer();
+        IndexerConfiguration configuration = IndexerConfigurationXml.getInstance();
+        Indexer indexer = new OaiDcIndexer(configuration);
         indexer.index();
     }
 }

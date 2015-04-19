@@ -12,15 +12,15 @@
  limitations under the License.
  */
 
-package com.bardsoftware.papeeria.sufler.retriever.oai;
+package com.bardsoftware.papeeria.sufler.indexer.configuration;
 
-import org.junit.Test;
+import java.util.List;
 
-public class OaiRetrieverTest {
-	@Test
-	public void testRetrieve() {
-        OaiConfiguration configuration = OaiConfiguration.getInstance();
-		OaiRetriever retriever = new OaiRetriever(configuration);
-		retriever.retrieve();
-	}
+public interface IndexerConfiguration {
+    public enum Type {
+        OAI
+    }
+    String getIndexPath();
+
+    List<String> getDirectories();
 }

@@ -6,6 +6,9 @@ import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
 import javax.xml.namespace.QName;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * This object contains factory methods for each

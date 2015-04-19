@@ -3,16 +3,15 @@ package com.bardsoftware.papeeria.sufler.struct.oai.dc;
 
 import com.bardsoftware.papeeria.sufler.struct.oai.MetadataType;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.Generated;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementRefs;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * AUTO GENERATED, DO NOT EDIT
+ */
 
 /**
  * <p>Java class for oai_dcType complex type.
