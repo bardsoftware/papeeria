@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.bardsoftware.papeeria.topic_modeling.util.MapUtils;
 import com.bardsoftware.papeeria.topic_modeling.util.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -31,9 +30,10 @@ public final class Searcher {
 			throws IOException, ParseException {
 		final Map<String, Float> searchResult = new HashMap<>();
 		final QueryParser parser = new QueryParser("contents", analyzer);
+
 		try (PDDocument document = PDDocument.load(pathToPDF.toString())) {
 			final PDFTextStripper stripper = new PDFTextStripper();
-			final String stringQuery = StringUtils.removeNonAlphanumeric(stripper.getText(document));
+			final String stringQuery = StringUtils.preprocess(stripper.getText(document));
 			final String[] chunks = StringUtils.splitIntoChunks(stringQuery, CHUNK_LENGTH);
 
 			for (String s : chunks) {
@@ -46,7 +46,7 @@ public final class Searcher {
 
 	public static List<CategoryWeightPair> searchByTxt(Path pathToTxt, IndexSearcher searcher, Analyzer analyzer)
 			throws IOException, ParseException {
-		final String stringQuery = StringUtils.removeNonAlphanumeric(new String(Files.readAllBytes(pathToTxt)));
+		final String stringQuery = StringUtils.preprocess(new String(Files.readAllBytes(pathToTxt)));
 		final QueryParser parser = new QueryParser("contents", analyzer);
 		final Query query = parser.parse(stringQuery);
 		final Map<String, Float> searchResults = new HashMap<>();
@@ -61,8 +61,8 @@ public final class Searcher {
 		for (ScoreDoc hit : hits) {
 			final Document doc = searcher.doc(hit.doc);
 			final String category = doc.get("category");
-			final float score = hit.score / Float.parseFloat(doc.get("category_size"));
-			MapUtils.addToMap(searchResults, category, score);
+			final Float score = hit.score / Float.parseFloat(doc.get("category_size"));
+			searchResults.put(category, searchResults.getOrDefault(category, 0f) + score);
 		}
 	}
 }

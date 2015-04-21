@@ -13,7 +13,15 @@ public final class StringUtils {
 		return s.split(String.format("(?<=\\G.{%d})", step));
 	}
 
-	public static String removeFirstWord(String str) {
-		return str.split(" ", 2)[1];
+	public static String removeFirstWord(String s) {
+		return s.split(" ", 2)[1];
+	}
+
+	public static String removeHyphenation(String s) {
+		return s.replaceAll("\\-[\r\n\b]", "");
+	}
+
+	public static String preprocess(String s) {
+		return removeHyphenation(removeNonAlphanumeric(s));
 	}
 }
