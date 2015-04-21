@@ -10,6 +10,7 @@ import java.util.Map;
 import com.bardsoftware.papeeria.topic_modeling.util.MapUtils;
 import com.bardsoftware.papeeria.topic_modeling.util.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -37,7 +38,7 @@ public final class Searcher {
 
 			for (String s : chunks) {
 				final Query query = parser.parse(s);
-				MapUtils.mergeTwoMaps(searchResult, search(searcher, query));
+				search(searcher, query, searchResult);
 			}
 		}
 		return CategoryWeightPair.sortByWeights(searchResult);
@@ -48,18 +49,20 @@ public final class Searcher {
 		final String stringQuery = StringUtils.removeNonAlphanumeric(new String(Files.readAllBytes(pathToTxt)));
 		final QueryParser parser = new QueryParser("contents", analyzer);
 		final Query query = parser.parse(stringQuery);
-		return CategoryWeightPair.sortByWeights(search(searcher, query));
+		final Map<String, Float> searchResults = new HashMap<>();
+		search(searcher, query, searchResults);
+		return CategoryWeightPair.sortByWeights(searchResults);
 	}
 
-	private static Map<String, Float> search(IndexSearcher searcher, Query query) throws IOException {
+	private static void search(IndexSearcher searcher, Query query, Map<String, Float> searchResults) throws IOException {
 		final TopDocs results = searcher.search(query, HITS_PER_PAGE);
 		final ScoreDoc[] hits = results.scoreDocs;
 
-		final Map<String, Float> categoryIntoScore = new HashMap<>();
 		for (ScoreDoc hit : hits) {
-			final String category = searcher.doc(hit.doc).get("category");
-			MapUtils.addToMap(categoryIntoScore, category, hit.score);
+			final Document doc = searcher.doc(hit.doc);
+			final String category = doc.get("category");
+			final float score = hit.score / Float.parseFloat(doc.get("category_size"));
+			MapUtils.addToMap(searchResults, category, score);
 		}
-		return categoryIntoScore;
 	}
 }

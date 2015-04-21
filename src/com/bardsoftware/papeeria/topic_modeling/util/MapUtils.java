@@ -12,8 +12,6 @@ public final class MapUtils {
 	}
 
 	public static <K> void mergeTwoMaps(Map<K, Float> toMergeIn, Map<? extends K, ? extends Float> toBeMerged) {
-		for (Map.Entry<? extends K, ? extends Float> entry : toBeMerged.entrySet()) {
-			addToMap(toMergeIn, entry.getKey(), entry.getValue());
-		}
+		toBeMerged.entrySet().forEach(e -> addToMap(toMergeIn, e.getKey(), e.getValue()));
 	}
 }

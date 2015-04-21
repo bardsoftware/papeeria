@@ -3,6 +3,7 @@ package com.bardsoftware.papeeria.topic_modeling.index;
 import com.bardsoftware.papeeria.topic_modeling.util.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
@@ -20,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class Indexer {
 
@@ -28,36 +31,53 @@ public final class Indexer {
 
 	public static void indexDocs(IndexWriter writer, Path corpus) throws IOException {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(corpus)) {
+			final Map<String, Integer> sizes = readSizes(corpus.resolve("sizes"));
 			for (Path categoryDir : directoryStream) {
-				try (BufferedReader index = Files.newBufferedReader(categoryDir.resolve("index"), StandardCharsets.UTF_8)) {
-					Files.walkFileTree(categoryDir, new SimpleFileVisitor<Path>() {
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-							if (!file.getFileName().toString().equals("index")) {
-								try {
-									final String title = StringUtils.removeFirstWord(index.readLine());
-									indexDoc(writer, file, title);
-								} catch (IOException e) {
-									System.err.printf("unable to index a '%s' file", file.getFileName());
+				if (Files.isDirectory(categoryDir)) {
+					try (BufferedReader index = Files.newBufferedReader(categoryDir.resolve("index"), StandardCharsets.UTF_8)) {
+						Files.walkFileTree(categoryDir, new SimpleFileVisitor<Path>() {
+							@Override
+							public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+								if (!file.getFileName().toString().equals("index")) {
+									try {
+										final String title = StringUtils.removeFirstWord(index.readLine());
+										indexDoc(writer, file, title, sizes);
+									} catch (IOException e) {
+										System.err.printf("unable to index a '%s' file", file.getFileName());
+									}
 								}
+								return FileVisitResult.CONTINUE;
 							}
-							return FileVisitResult.CONTINUE;
-						}
-					});
+						});
+					}
 				}
 			}
 		}
 	}
 
+	private static Map<String, Integer> readSizes(Path pathToSizesFile) throws IOException {
+		final Map<String, Integer> sizes = new HashMap<>();
+		final String content = new String(Files.readAllBytes(pathToSizesFile));
+		final String[] split = content.split("\\s");
+		for (int i = 0; i < split.length; i++) {
+			final String category = split[i];
+			final Integer size = Integer.parseInt(split[++i]);
+			sizes.put(category, size);
+		}
+		return sizes;
+	}
 
-	public static void indexDoc(IndexWriter writer, Path file, String title) throws IOException {
+	public static void indexDoc(IndexWriter writer, Path file, String title, Map<String, Integer> sizes) throws IOException {
 		try (InputStream stream = Files.newInputStream(file)) {
 			final Document doc = new Document();
 
 			final Field pathField = new StringField("path", file.toString(), Field.Store.YES);
 			doc.add(pathField);
 
-			doc.add(new StringField("category", file.getParent().getFileName().toString(), Field.Store.YES));
+			final String category = file.getParent().getFileName().toString();
+			doc.add(new StringField("category", category, Field.Store.YES));
+
+			doc.add(new IntField("category_size", sizes.getOrDefault(category, -1), Field.Store.YES));
 
 			doc.add(new StringField("title", title, Field.Store.YES));
 

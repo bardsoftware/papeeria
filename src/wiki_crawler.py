@@ -46,11 +46,16 @@ def write(pages, dir_name):
             index.write('%s %s\n' % (page_filename, page.title))
             print('\'%s\' page has been processed' % page.title)
             counter += 1
+    with open('corpus/sizes', 'a') as sizes:
+        sizes.write('\n%s %d' % (dir_name, counter))
 
 
 def get_pages(urls_and_titles):
     for _, title in urls_and_titles:
-        yield wiki.page(title)
+        try:
+            yield wiki.page(title)
+        except wiki.DisambiguationError:
+            pass
 
 
 def crawl(category_name):

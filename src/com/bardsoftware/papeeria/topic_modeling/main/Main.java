@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 
 import com.bardsoftware.papeeria.topic_modeling.index.Indexer;
 import com.bardsoftware.papeeria.topic_modeling.search.CategoryWeightPair;
@@ -124,13 +125,15 @@ public final class Main {
 	private static void searchPDFs(Path pathToDir, IndexSearcher searcher, Analyzer analyzer) {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(pathToDir)) {
 			for (Path pathToPDF : directoryStream) {
-				System.out.println(pathToPDF.getFileName());
 				try {
-					CategoryWeightPair.clusterAndPrintToStdOut(Searcher.searchByPDF(pathToPDF, searcher, analyzer));
+					final List<CategoryWeightPair> result = Searcher.searchByPDF(pathToPDF, searcher, analyzer);
+					System.out.println(pathToPDF.getFileName());
+					CategoryWeightPair.clusterAndPrintToStdOut(result);
+					System.out.println(DELIMITER);
 				} catch (ParseException e) {
 					System.out.println(UNABLE_TO_PARSE_MESSAGE);
+				} catch (IOException ignored) {  // nonPDF file
 				}
-				System.out.println(DELIMITER);
 			}
 		} catch (IOException e) {
 			System.out.println(WRONG_QUERY_PATH_MESSAGE + pathToDir);
