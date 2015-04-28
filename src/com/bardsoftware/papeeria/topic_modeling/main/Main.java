@@ -132,8 +132,7 @@ public final class Main {
 					System.out.println(DELIMITER);
 				} catch (ParseException e) {
 					System.out.println(UNABLE_TO_PARSE_MESSAGE);
-				} catch (IOException ignored) {  // nonPDF file
-				}
+				} catch (IOException ignored) {}  // nonPDF file
 			}
 		} catch (IOException e) {
 			System.out.println(WRONG_QUERY_PATH_MESSAGE + pathToDir);

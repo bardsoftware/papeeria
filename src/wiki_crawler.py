@@ -1,4 +1,6 @@
 # encoding: utf-8
+__author__ = 'khazhoyan'
+
 import os
 import requests
 import wikipedia as wiki
