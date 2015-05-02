@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3.4
-# encoding: utf-8
+# coding: utf-8
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from subprocess import check_output
@@ -21,7 +21,7 @@ class Handler(BaseHTTPRequestHandler):
         out = check_output(['java', '-jar', 'jar/NER.jar', 'search', 'tmp', '-pdf', '-ru'])
         self.wfile.write(out)
 
-
-server = HTTPServer(('', DEFAULT_PORT), Handler)
-print('Started httpserver on port %d' % DEFAULT_PORT)
-server.serve_forever()
+if __name__ == '__main__':
+    server = HTTPServer(('', DEFAULT_PORT), Handler)
+    print('Started httpserver on port %d' % DEFAULT_PORT)
+    server.serve_forever()

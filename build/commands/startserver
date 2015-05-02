@@ -1,2 +1,1 @@
-#!/bin/bash
 python3.4 /data/papeeria/src/server.py
