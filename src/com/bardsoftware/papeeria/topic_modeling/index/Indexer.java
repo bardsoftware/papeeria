@@ -59,7 +59,7 @@ public final class Indexer {
 		final Map<String, Integer> sizes = new HashMap<>();
 		final String content = new String(Files.readAllBytes(pathToSizesFile));
 		final String[] split = content.split("\\s");
-		for (int i = 0; i < split.length; i++) {
+		for (int i = 1; i < split.length; i++) {
 			final String category = split[i];
 			final Integer size = Integer.parseInt(split[++i]);
 			sizes.put(category, size);
