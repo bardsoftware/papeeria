@@ -45,8 +45,7 @@ def write(pages, dir_name):
             with open(out_dir + page_filename, 'wb') as out:
                 out.write(page.content.encode('utf-8'))
             index.write(('%s %s\n' % (page_filename, page.title)).encode('utf-8'))
-            # print(counter)
-            print(page.title)
+            print(counter)
             counter += 1
     with open('corpus/sizes', 'a') as sizes:
         sizes.write('\n%s %d' % (dir_name, counter))
