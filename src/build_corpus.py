@@ -4,7 +4,8 @@ from subprocess import call
 
 with open('/data/papeeria/build/topics', 'r') as topics:
     for line in topics:
-        call(['python3.4', '/data/papeeria/src/wiki_crawler.py', "'%s'" % line, '-ru'])
-        print('%s has been processed' % line[:-1])
+        line = line.strip()
+        call(['python3.4', '/data/papeeria/src/wiki_crawler.py', line, '-ru'])
+        print('%s has been processed' % line)
 
-call(['classifier', 'index', '-ru'])
+call(['java', '-jar', '/data/papeeria/jar/NER.jar', 'index', '-ru'])

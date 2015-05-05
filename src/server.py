@@ -1,4 +1,3 @@
-#!/usr/local/bin/python3.4
 # coding: utf-8
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
