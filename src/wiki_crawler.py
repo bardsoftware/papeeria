@@ -38,14 +38,15 @@ def write(pages, dir_name):
     out_dir = 'corpus/' + dir_name
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
-    with open(out_dir + '/index', 'w') as index:
+    with open(out_dir + '/index', 'wb') as index:
         counter = 0
         for page in pages:
             page_filename = '/page%04d' % counter
-            with open(out_dir + page_filename, 'w') as out:
-                out.write(page.content)
-            index.write('%s %s\n' % (page_filename, page.title))
-            print('\'%s\' page has been processed' % page.title)
+            with open(out_dir + page_filename, 'wb') as out:
+                out.write(page.content.encode('utf-8'))
+            index.write(('%s %s\n' % (page_filename, page.title)).encode('utf-8'))
+            # print(counter)
+            print(page.title)
             counter += 1
     with open('corpus/sizes', 'a') as sizes:
         sizes.write('\n%s %d' % (dir_name, counter))
