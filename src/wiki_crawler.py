@@ -41,7 +41,7 @@ def write(pages, dir_name):
     with open(out_dir + '/index', 'w') as index:
         counter = 0
         for page in pages:
-            page_filename = '/page%03d' % counter
+            page_filename = '/page%04d' % counter
             with open(out_dir + page_filename, 'w') as out:
                 out.write(page.content)
             index.write('%s %s\n' % (page_filename, page.title))
