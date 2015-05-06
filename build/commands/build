@@ -1,1 +1,1 @@
-python3.4 /data/papeeria/src/build_corpus.py
+python3.4 papeeria/src/build_corpus.py

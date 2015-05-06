@@ -14,6 +14,8 @@ class Handler(BaseHTTPRequestHandler):
         data = self.rfile.read(int(length))
         self.send_response(OK_CODE)
 
+        print(data[:100])
+
         with open('tmp/tmp.pdf', 'wb') as tmp:
             tmp.write(data)
 
