@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oaiConfiguration>
+    <url>http://export.arxiv.org/oai2</url>
+    <requestGap>20</requestGap>
+    <!-- in seconds -->
+    <metadata>
+        <prefix>oai_dc</prefix>
+        <class>com.bardsoftware.papeeria.sufler.retriever.oai.metadata.DublinCoreMetadata</class>
+    </metadata>
+    <path>resources\data\test\</path>
+    <source>arXiv</source>
+</oaiConfiguration>
