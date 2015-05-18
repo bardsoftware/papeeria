@@ -51,7 +51,9 @@ public class Converter {
                 source.getTitles().add(value);
                 break;
             case "description":
-                source.getDescriptions().add(value);
+                if ((source.getDescription() == null) || (value.length() > source.getDescription().length())) {
+                    source.setDescription(value);
+                }
                 break;
             case "identifier":
                 source.getIdentifiers().add(value);

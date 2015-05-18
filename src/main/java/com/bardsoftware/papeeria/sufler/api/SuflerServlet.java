@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Base64;
 
 public class SuflerServlet extends HttpServlet {
 
@@ -76,9 +77,9 @@ public class SuflerServlet extends HttpServlet {
 
     public static SuflerOutput search(SuflerInput input) throws IOException, ParseException {
         SuflerOutput output = new SuflerOutput();
-        SearcherConfiguration configuration = new SearcherConfiguration("resources/data/index/test", 10);
+        SearcherConfiguration configuration = new SearcherConfiguration("src/main/resources/data/index/test", 10);
         Searcher searcher = new Searcher(configuration);
-        TopDocs docs = searcher.search(input.getQuery(), input.getSize());
+        TopDocs docs = searcher.search(decodeFromBase64(input.getQuery()), input.getSize());
         for (ScoreDoc scoreDoc : docs.scoreDocs) {
             float score = scoreDoc.score;
             Document doc = searcher.getDocument(scoreDoc);
@@ -86,6 +87,13 @@ public class SuflerServlet extends HttpServlet {
             output.getSources().add(source);
         }
         return output;
+    }
+
+    private static String decodeFromBase64(String encodedString) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] encodedJson = decoder.decode(encodedString);
+        String decodedString = new String(encodedJson);
+        return decodedString;
     }
 
     public static void fillResponse(HttpServletResponse resp, String json) throws IOException {

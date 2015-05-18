@@ -20,7 +20,7 @@ import java.util.List;
 public class Source {
     private List<String> myCreators;
     private List<String> myTitles;
-    private List<String> myDescriptions;
+    private String myDescription;
     private List<String> myIdentifiers;
     private List<String> mySubjects;
     private List<String> myDates;
@@ -29,7 +29,7 @@ public class Source {
     public Source() {
         myCreators = new ArrayList<>();
         myTitles = new ArrayList<>();
-        myDescriptions = new ArrayList<>();
+        //myDescription = new ArrayList<>();
         myIdentifiers = new ArrayList<>();
         mySubjects = new ArrayList<>();
         myDates = new ArrayList<>();
@@ -51,12 +51,12 @@ public class Source {
         myTitles = title;
     }
 
-    public List<String> getDescriptions() {
-        return myDescriptions;
+    public String getDescription() {
+        return myDescription;
     }
 
-    public void setDescriptions(List<String> description) {
-        myDescriptions = description;
+    public void setDescription(String description) {
+        myDescription = description;
     }
 
     public List<String> getIdentifiers() {

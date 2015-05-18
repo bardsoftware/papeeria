@@ -22,6 +22,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -51,6 +52,7 @@ public class Searcher {
     }
 
     public TopDocs search(String searchQuery, Integer resultSize) throws ParseException, IOException {
+        BooleanQuery.setMaxClauseCount(20000);
         Query myQuery = myQueryParser.parse(QueryParser.escape(searchQuery));
         resultSize = (resultSize != null) ? resultSize : myConfiguration.getSize();
         return mySearcher.search(myQuery, resultSize);
