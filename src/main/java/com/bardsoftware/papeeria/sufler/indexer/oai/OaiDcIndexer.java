@@ -75,6 +75,9 @@ public class OaiDcIndexer extends Indexer {
         Document document = new Document();
 
         MetadataType metadata = record.getMetadata();
+        if (metadata == null) {
+            return;
+        }
         Node oaiDcNode = (Node) metadata.getAny();
         JAXBContext dcContext = JAXBContext.newInstance("com.bardsoftware.papeeria.sufler.struct.oai.dc");
         Unmarshaller un = dcContext.createUnmarshaller();
