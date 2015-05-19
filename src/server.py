@@ -18,7 +18,9 @@ class Handler(BaseHTTPRequestHandler):
             with urlopen(url) as in_file, open("tmp/tmp.pdf", "wb") as out_file:
                 out_file.write(in_file.read())
             out = check_output(['java', '-jar', 'jar/NER.jar', 'search', 'tmp', '-pdf', '-ru'])
+            self.send_response(200)
             self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(out)
 
