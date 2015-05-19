@@ -77,7 +77,7 @@ public class SuflerServlet extends HttpServlet {
 
     public static SuflerOutput search(SuflerInput input) throws IOException, ParseException {
         SuflerOutput output = new SuflerOutput();
-        SearcherConfiguration configuration = new SearcherConfiguration("src/main/resources/data/index/test", 10);
+        SearcherConfiguration configuration = new SearcherConfiguration("/media/sufler/index", 10);
         Searcher searcher = new Searcher(configuration);
         TopDocs docs = searcher.search(decodeFromBase64(input.getQuery()), input.getSize());
         for (ScoreDoc scoreDoc : docs.scoreDocs) {

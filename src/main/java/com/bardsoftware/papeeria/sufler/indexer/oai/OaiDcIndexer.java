@@ -57,7 +57,6 @@ public class OaiDcIndexer extends Indexer {
     @Override
     protected void indexFile(File file) throws IOException {
         try {
-            LOGGER.debug("Indexing file: " + file.getName());
             JAXBContext jaxbContext = JAXBContext.newInstance("com.bardsoftware.papeeria.sufler.struct.oai");
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             OAIPMHtype oaiDoc = (OAIPMHtype) ((JAXBElement) unmarshaller.unmarshal(file)).getValue();
@@ -106,8 +105,8 @@ public class OaiDcIndexer extends Indexer {
 
     public static void main(String[] args) throws IOException {
         List<String> directories = new ArrayList<>();
-        directories.add("resources/data/test/arXiv");
-        IndexerConfiguration configuration = new IndexerConfiguration("resources/data/index/test", directories);
+        directories.add("/media/sufler/arXiv");
+        IndexerConfiguration configuration = new IndexerConfiguration("/media/sufler/index", directories);
         Indexer indexer = new OaiDcIndexer(configuration);
         indexer.index();
     }

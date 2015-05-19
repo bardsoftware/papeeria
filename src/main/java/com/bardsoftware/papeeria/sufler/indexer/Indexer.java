@@ -52,11 +52,17 @@ public abstract class Indexer {
     }
 
     private void indexDirectory(File directory) throws IOException {
-        LOGGER.debug("Indexing directory: " + directory.getName());
+        LOGGER.info("Indexing directory: " + directory.getName());
         File[] files = directory.listFiles();
+        LOGGER.info("WE have " + String.valueOf(files.length) + " files");
+        int counter = 0;
         for (File file : files) {
+            counter++;
+            LOGGER.info("Indexing file: " + file.getName() + "(" + counter + " of " + files.length + ")");
             if (isValidFile(file)) {
                 indexFile(file);
+            } else {
+                LOGGER.info("File is not valid");
             }
         }
     }
