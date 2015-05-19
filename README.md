@@ -1,4 +1,4 @@
-# CSC simple topic modeling
+# CSC simple document classification
 
 Прототип, определяющий тему статьи с помощью категорий википедии и векторного поиска.
 
