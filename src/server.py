@@ -19,6 +19,7 @@ class Handler(BaseHTTPRequestHandler):
                 out_file.write(in_file.read())
             out = check_output(['java', '-jar', 'jar/NER.jar', 'search', 'tmp', '-pdf', '-ru'])
             self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
             self.wfile.write(out)
 
     def do_POST(self):
