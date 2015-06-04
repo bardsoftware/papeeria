@@ -26,29 +26,14 @@
 }
 
 {{#sprite}}
-{{class}} {
-  margin: 5px;
-  line-height: 30px;
-
-  i {
-    cursor: pointer;
-    .transition(opacity 0.1s ease-in-out);
-    &:hover {
-      opacity: 0.5;
-    }
-    cursor: pointer;
-
+{{class}} i {
+  background-image: url('{{{escaped_image}}}');
+  {{#retina}}
+  @media (min--moz-device-pixel-ratio: 1.5), (-o-min-device-pixel-ratio: 3/2), (-webkit-min-device-pixel-ratio: 1.5), (min-device-pixel-ratio: 1.5), (min-resolution: 1.5dppx) {
     background-image: url('{{{escaped_image}}}');
-    {{#retina}}
-    @media (min--moz-device-pixel-ratio: 1.5), (-o-min-device-pixel-ratio: 3/2), (-webkit-min-device-pixel-ratio: 1.5), (min-device-pixel-ratio: 1.5), (min-resolution: 1.5dppx) {
-      background-image: url('{{{escaped_image}}}');
-      background-size: {{px.total_width}} {{px.total_height}};
-    }
-    {{/retina}}
+    background-size: {{px.total_width}} {{px.total_height}};
   }
-  code {
-    margin-left: 15px;
-  }
+  {{/retina}}
 }
 
 {{#items}}
