@@ -73,6 +73,7 @@ function convertSymbolName(symbol) {
             .replace(/[\)]/g, "rparen")
             .replace(/[\[]/g, "lbracket")
             .replace(/[\]]/g, "rbracket")
+            .replace(/\{.*\}/g, "")
             .replace(/[\{]/g, "lcurlybracket")
             .replace(/[\}]/g, "rcurlybracket")
             .replace(/[\/]/g, "trueslash");
