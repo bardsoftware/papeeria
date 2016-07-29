@@ -11,7 +11,7 @@ s = '\\newlabel'
 listOfLabels = []
 
 for line in f:
-	if (line[:len(s)] == s):
+	if line.find(s) == 0:
 		line = line.replace('}', '')
 		line = line.split('{')
 		node = {}
