@@ -11,15 +11,15 @@ s = '\\newlabel'
 listOfLabels = []
 
 for line in f:
-	if line.find(s) == 0:
-		line = line.replace('}', '')
-		line = line.split('{')
-		node = {}
-		node['type'] = line[6].split('.')[0]
-		node['caption'] = line[1]
-		listOfLabels.append(node)
+    if line.startswith(s):
+        line = line.replace('}', '')
+        line = line.split('{')
+        node = {}
+        node['type'] = line[6].split('.')[0]
+        node['caption'] = line[1]
+        listOfLabels.append(node)
 
 data = {}
 data['Labels'] = listOfLabels
 
-print(json.dumps(data))	
+print(json.dumps(data))    
