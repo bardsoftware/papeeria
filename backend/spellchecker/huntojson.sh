@@ -52,9 +52,10 @@ JSON=$(
     grep '^&.*' | 
     sort | uniq |   
     awk '
-    BEGIN { print "{" }
+    BEGIN { printf "{"; comma=""; }
     {
-        print "\""$2"\": [" ;
+        printf comma"\""$2"\": [" ;
+        comma=","
 
         split($0, split_string, ": ");
         options_number=split(split_string[2], options, ", ");
@@ -63,16 +64,16 @@ JSON=$(
         {
             printf "\""options[i]"\""
             if (i < options_number)
-                { print "," }
+            {
+                printf ","
+            }
         }
         
-        print "]," }
-    END { print "}" }
+        printf "]" 
+    }
+    END { printf "}" }
     ' 
 )
 
-echo "$JSON" | 
-sed ':a;N;$!ba;s/,\n}/\n}/g' 
-# some kind of sed magic here to remove 
-# the last comma before the last closing brace
+echo "$JSON"
 
