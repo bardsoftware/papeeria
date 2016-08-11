@@ -10,8 +10,8 @@ and write to standard output.
     -h         display this help and exit
     -d dict    use custom dictionaries
 
-Example: ${0##*/} demo.tex                      # launch hunspell on 'demo.tex'
-         ${0##*/} -d ru_RU ru_demo.tex          # use russian dictionary
+Example: ${0##*/} demo.tex                # launch hunspell on 'demo.tex'
+         ${0##*/} -d ru_RU ru_demo.tex    # use russian dictionary
 EOF
 }
 
@@ -26,7 +26,7 @@ while getopts ":hd:" opt; do
             exit 0
             ;;
         d)
-            DICT="-p $OPTARG"
+            DICT="-p \"$OPTARG\""
             ;;
         ?)
             echo -e "Invalid option: -$OPTARG\n" >&2
@@ -47,24 +47,32 @@ fi
 INFILE=$1
 
 JSON=$(
-    cat $INFILE    | 
-    hunspell -a -t | 
-    grep "^&.*"    | 
-    awk $DICT '
+    cat "$INFILE" | 
+    hunspell -a -t $DICT | 
+    grep '^&.*' | 
+    sort | uniq |   
+    awk '
     BEGIN { print "{" }
     {
-        print "\t\""$2"\": [" ;
+        print "\""$2"\": [" ;
 
         split($0, split_string, ": ");
         options_number=split(split_string[2], options, ", ");
 
         for (i = 1; i <= options_number; i++) 
-            {print "\t\t\""options[i]"\","} 
+        {
+            printf "\""options[i]"\""
+            if (i < options_number)
+                { print "," }
+        }
         
-        print "\t]," }
+        print "]," }
     END { print "}" }
-    '
+    ' 
 )
 
-echo $JSON
+echo "$JSON" | 
+sed ':a;N;$!ba;s/,\n}/\n}/g' 
+# some kind of sed magic here to remove 
+# the last comma before the last closing brace
 
