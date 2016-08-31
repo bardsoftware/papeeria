@@ -1,3 +1,4 @@
+# Author: Sergey Sokolov
 import grpc
 
 import spellchecker_pb2

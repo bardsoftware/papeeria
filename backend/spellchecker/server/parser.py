@@ -1,5 +1,5 @@
+# Author: Sergey Sokolov
 from ctypes import cdll, c_char_p, pointer, Structure
-from weakref import proxy
 
 
 class Parser:

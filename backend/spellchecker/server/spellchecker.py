@@ -1,3 +1,4 @@
+# Author: Sergey Sokolov
 import os.path
 
 import hunspell

@@ -1,7 +1,7 @@
 from grpc.tools import protoc
 
 
-protoc.main (
+protoc.main(
     (
         '',
         '-I../proto',
