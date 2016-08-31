@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "com.papeeria";
+option java_package = "com.bardsoftware.papeeria.backend.spellchecker";
 
 service Spellcheck {
     rpc CheckText(Text) returns (Suggestions) {}
@@ -11,5 +11,9 @@ message Text {
 }
 
 message Suggestions {
-    string json = 1;
+    message Suggestion {
+        string key = 1;
+        repeated string values = 2;
+    }
+    map<string, Suggestion> suggestions = 1;
 }
