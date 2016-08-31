@@ -1,0 +1,15 @@
+syntax = "proto3";
+option java_package = "com.papeeria";
+
+service Spellcheck {
+    rpc CheckText(Text) returns (Suggestions) {}
+}
+
+message Text {
+    bytes text = 1;
+    repeated string language = 2;
+}
+
+message Suggestions {
+    string json = 1;
+}

@@ -1,4 +1,3 @@
 .idea
-spellchecker.iml
-lib
-out
+libparser/build/*
+!libparser/build/Makefile
