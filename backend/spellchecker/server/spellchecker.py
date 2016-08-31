@@ -3,6 +3,7 @@ import os.path
 
 import hunspell
 import ujson
+from spellchecker_pb2 import Suggestions
 
 from parser import Parser
 
@@ -14,7 +15,7 @@ class Spellchecker:
     """
     def __init__(self, path: str = '', language: str ='', log: object = None):
         self._hunspell_instances = {}
-        self._parser = Parser()
+        self._parser = Parser("../libparser/build/libparser.so")
         self._log = log
 
         if path is not '':
@@ -51,13 +52,14 @@ class Spellchecker:
         :param languages: Languages list.
         :return: JSON with suggestions for misspelled words.
         """
-        suggestions = {}
+        suggestions_map = Suggestions()
         hunspells = (self._hunspell_instances[lang] for lang in languages if lang in self._hunspell_instances)
         tokens = self._parser.tokenize(text)
 
         for h in hunspells:
             for token in tokens:
                 if not h.spell(token):
-                    suggestions[token] = h.suggest(token)
+                    suggestions_map.suggestions[token].values.extend(h.suggest(token))
 
-        return ujson.dumps(suggestions)
+        # return ujson.dumps(suggestions)
+        return suggestions_map

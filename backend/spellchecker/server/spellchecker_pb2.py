@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='spellchecker.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x12spellchecker.proto\"&\n\x04Text\x12\x0c\n\x04text\x18\x01 \x01(\x0c\x12\x10\n\x08language\x18\x02 \x03(\t\"\x1b\n\x0bSuggestions\x12\x0c\n\x04json\x18\x01 \x01(\t20\n\nSpellcheck\x12\"\n\tCheckText\x12\x05.Text\x1a\x0c.Suggestions\"\x00\x42\x15\n\x13\x63om.papeeria.clientb\x06proto3')
+  serialized_pb=_b('\n\x12spellchecker.proto\"&\n\x04Text\x12\x0c\n\x04text\x18\x01 \x01(\x0c\x12\x10\n\x08language\x18\x02 \x03(\t\"\xac\x01\n\x0bSuggestions\x12\x32\n\x0bsuggestions\x18\x01 \x03(\x0b\x32\x1d.Suggestions.SuggestionsEntry\x1a\x1c\n\nSuggestion\x12\x0e\n\x06values\x18\x01 \x03(\t\x1aK\n\x10SuggestionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.Suggestions.Suggestion:\x02\x38\x01\x32\x30\n\nSpellcheck\x12\"\n\tCheckText\x12\x05.Text\x1a\x0c.Suggestions\"\x00\x42\x30\n.com.bardsoftware.papeeria.backend.spellcheckerb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -64,17 +64,17 @@ _TEXT = _descriptor.Descriptor(
 )
 
 
-_SUGGESTIONS = _descriptor.Descriptor(
-  name='Suggestions',
-  full_name='Suggestions',
+_SUGGESTIONS_SUGGESTION = _descriptor.Descriptor(
+  name='Suggestion',
+  full_name='Suggestions.Suggestion',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='json', full_name='Suggestions.json', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='values', full_name='Suggestions.Suggestion.values', index=0,
+      number=1, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -90,10 +90,81 @@ _SUGGESTIONS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=62,
-  serialized_end=89,
+  serialized_start=130,
+  serialized_end=158,
 )
 
+_SUGGESTIONS_SUGGESTIONSENTRY = _descriptor.Descriptor(
+  name='SuggestionsEntry',
+  full_name='Suggestions.SuggestionsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='Suggestions.SuggestionsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='Suggestions.SuggestionsEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=160,
+  serialized_end=235,
+)
+
+_SUGGESTIONS = _descriptor.Descriptor(
+  name='Suggestions',
+  full_name='Suggestions',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='suggestions', full_name='Suggestions.suggestions', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[_SUGGESTIONS_SUGGESTION, _SUGGESTIONS_SUGGESTIONSENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=63,
+  serialized_end=235,
+)
+
+_SUGGESTIONS_SUGGESTION.containing_type = _SUGGESTIONS
+_SUGGESTIONS_SUGGESTIONSENTRY.fields_by_name['value'].message_type = _SUGGESTIONS_SUGGESTION
+_SUGGESTIONS_SUGGESTIONSENTRY.containing_type = _SUGGESTIONS
+_SUGGESTIONS.fields_by_name['suggestions'].message_type = _SUGGESTIONS_SUGGESTIONSENTRY
 DESCRIPTOR.message_types_by_name['Text'] = _TEXT
 DESCRIPTOR.message_types_by_name['Suggestions'] = _SUGGESTIONS
 
@@ -105,15 +176,33 @@ Text = _reflection.GeneratedProtocolMessageType('Text', (_message.Message,), dic
 _sym_db.RegisterMessage(Text)
 
 Suggestions = _reflection.GeneratedProtocolMessageType('Suggestions', (_message.Message,), dict(
+
+  Suggestion = _reflection.GeneratedProtocolMessageType('Suggestion', (_message.Message,), dict(
+    DESCRIPTOR = _SUGGESTIONS_SUGGESTION,
+    __module__ = 'spellchecker_pb2'
+    # @@protoc_insertion_point(class_scope:Suggestions.Suggestion)
+    ))
+  ,
+
+  SuggestionsEntry = _reflection.GeneratedProtocolMessageType('SuggestionsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _SUGGESTIONS_SUGGESTIONSENTRY,
+    __module__ = 'spellchecker_pb2'
+    # @@protoc_insertion_point(class_scope:Suggestions.SuggestionsEntry)
+    ))
+  ,
   DESCRIPTOR = _SUGGESTIONS,
   __module__ = 'spellchecker_pb2'
   # @@protoc_insertion_point(class_scope:Suggestions)
   ))
 _sym_db.RegisterMessage(Suggestions)
+_sym_db.RegisterMessage(Suggestions.Suggestion)
+_sym_db.RegisterMessage(Suggestions.SuggestionsEntry)
 
 
 DESCRIPTOR.has_options = True
-DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('\n\023com.papeeria.client'))
+DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('\n.com.bardsoftware.papeeria.backend.spellchecker'))
+_SUGGESTIONS_SUGGESTIONSENTRY.has_options = True
+_SUGGESTIONS_SUGGESTIONSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 import grpc
 from grpc.beta import implementations as beta_implementations
 from grpc.beta import interfaces as beta_interfaces

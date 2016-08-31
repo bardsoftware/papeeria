@@ -10,4 +10,4 @@ Text = spellchecker_pb2.Text()
 Text.text = b"test line wth errorz"
 Text.language.extend(["en_US", "ru_RU"])
 response = stub.CheckText(Text)
-print(response.json)
+print(response.suggestions)
