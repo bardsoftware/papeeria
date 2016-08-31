@@ -12,8 +12,7 @@ message Text {
 
 message Suggestions {
     message Suggestion {
-        string key = 1;
-        repeated string values = 2;
+        repeated string values = 1;
     }
     map<string, Suggestion> suggestions = 1;
 }
