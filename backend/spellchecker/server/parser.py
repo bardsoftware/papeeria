@@ -6,15 +6,15 @@ class Parser:
     """
     Class wraps CFFI for LaTeX parser from Hunspell source code.
     """
-    def __init__(self):
+    def __init__(self, libparser: str):
         # note: these fields' names doesn't start with "_" since deleting of this 
         # object isn't so straightforward -- for some reason interpreter destroys 
         # these "private" fields before __del__ is invoked.
-        self.parser_lib_ = cdll.LoadLibrary("../libparser/build/libparser.so")
-        self.parser_ = self.parser_lib_.latex_parser()
+        self.parser_lib = cdll.LoadLibrary(libparser)
+        self.parser = self.parser_lib.latex_parser()
 
     def __del__(self):
-        self.parser_lib_.delete_parser(self.parser_)
+        self.parser_lib.delete_parser(self.parser)
 
     def put_line(self, line: str):
         """
@@ -22,7 +22,7 @@ class Parser:
 
         :param line: A line from text to tokenize.
         """
-        self.parser_lib_.put_line(self.parser_, bytes(line, encoding="UTF-8"))
+        self.parser_lib.put_line(self.parser, bytes(line, encoding="UTF-8"))
 
     def next_token(self):
         """
@@ -32,10 +32,10 @@ class Parser:
         """
         # actually, we have to put a pointer to pointer to char so
         # to allocate new memory for the token
-        if self.parser_lib_.next_token(self.parser_, self._token_ptr_):
+        if self.parser_lib.next_token(self.parser, self._token_ptr_):
             word = str(self._token_ptr_.contents.token, encoding="UTF-8")
             # also we have to free the allocated memory manually
-            self.parser_lib_.free_token(self._token_ptr_)
+            self.parser_lib.free_token(self._token_ptr_)
             return word
         else:
             return None
@@ -52,10 +52,10 @@ class Parser:
         self.put_line(line)
         word = True
         while word:
-            if self.parser_lib_.next_token(self.parser_, self._token_ptr_):
+            if self.parser_lib.next_token(self.parser, self._token_ptr_):
                 word = str(self._token_ptr_.contents.token, encoding="UTF-8")
                 # also we have to free the allocated memory manually
-                self.parser_lib_.free_token(self._token_ptr_)
+                self.parser_lib.free_token(self._token_ptr_)
                 yield word
             else:
                 return
