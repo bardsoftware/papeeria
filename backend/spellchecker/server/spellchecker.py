@@ -46,11 +46,11 @@ class Spellchecker:
 
     def check_text(self, text: str, languages) -> str:
         """
-        Check text using chosen languages and return JSON with suggestions.
+        Check text using chosen languages and return Suggestions message object.
 
         :param text: Text to check.
         :param languages: Languages list.
-        :return: JSON with suggestions for misspelled words.
+        :return: Suggestions message (dictionary-like) for misspelled words.
         """
         suggestions_map = Suggestions()
         hunspells = (self.hunspell_instances[lang] for lang in languages if lang in self.hunspell_instances)
