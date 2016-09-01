@@ -1,5 +1,6 @@
 # Author: Sergey Sokolov
 import time
+import argparse
 
 import grpc
 from concurrent import futures
@@ -15,8 +16,8 @@ class SpellcheckerServicer(spellchecker_pb2.SpellcheckServicer):
     """
     gRPC service to check text that comes from clients.
     """
-    def __init__(self):
-        self.checker = Spellchecker("/usr/share/hunspell", "en_US")
+    def __init__(self, libparser, dict_path, language):
+        self.checker = Spellchecker(libparser, dict_path, language)
 
     def CheckText(self, request, context):
         """
@@ -33,23 +34,26 @@ class SpellcheckerServicer(spellchecker_pb2.SpellcheckServicer):
         return self.checker.check_text(text, languages)
 
 
-def serve(port: str, max_workers: int = 2):
+def serve(port: str, max_workers: int, libparser: str, dict_path: str, language: str):
     """
     Initialize and run the gRPC server.
 
     :param port: Port on which the server would be listening.
     :param max_workers: Size of thread pool to serve clients.
+    :param libparser: Path to C parser shared library.
+    :param dict_path: Path to .dic and .aff files
+    :param language: Language to add to spellchecker.
     """
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=max_workers)
     )
 
     spellchecker_pb2.add_SpellcheckServicer_to_server(
-        SpellcheckerServicer(),
+        SpellcheckerServicer(libparser, dict_path, language),
         server
     )
 
-    server.add_insecure_port('[::]:{}'.format(port))
+    server.add_insecure_port("[::]:{}".format(port))
     server.start()
 
     try:
@@ -58,5 +62,41 @@ def serve(port: str, max_workers: int = 2):
     except KeyboardInterrupt:
         server.stop(0)
 
-if __name__ == '__main__':
-    serve(50051)
+if __name__ == "__main__":
+    args_parser = argparse.ArgumentParser(description="Spellchecker gRPC server.")
+    args_parser.add_argument("-w", "--workers",
+                             action="store",
+                             type=int,
+                             default=2,
+                             metavar="NUM",
+                             help="size of thread pool")
+
+    required = args_parser.add_argument_group("required")
+    required.add_argument("-p", "--port",
+                          required=True,
+                          action="store",
+                          type=int,
+                          metavar="NUM",
+                          help="port which server would be listening")
+    required.add_argument("-l", "--libparser",
+                          required=True,
+                          action="store",
+                          type=str,
+                          metavar="PATH",
+                          help="path to libparser shared library")
+    required.add_argument("-d", "--dir",
+                          required=True,
+                          action="store",
+                          type=str,
+                          metavar="PATH",
+                          help="path to .dic and .aff files")
+    required.add_argument("-L", "--language",
+                          required=True,
+                          action="store",
+                          type=str,
+                          metavar="LANG",
+                          help="dictionary language")
+
+    args = args_parser.parse_args()
+
+    serve(args.port, args.workers, args.libparser, args.dir, args.language)
