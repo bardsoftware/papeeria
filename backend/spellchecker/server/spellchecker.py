@@ -2,8 +2,8 @@
 import os.path
 
 import hunspell
-from spellchecker_pb2 import Suggestions
 
+from spellchecker_pb2 import Suggestions
 from parser import Parser
 
 

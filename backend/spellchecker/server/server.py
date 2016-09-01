@@ -1,9 +1,9 @@
 # Author: Sergey Sokolov
 import time
 import argparse
+from concurrent import futures
 
 import grpc
-from concurrent import futures
 
 from spellchecker import Spellchecker
 import spellchecker_pb2
