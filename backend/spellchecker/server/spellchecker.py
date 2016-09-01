@@ -12,30 +12,27 @@ class Spellchecker:
     Class contains multiple hunspell instances (one per language) and provides
     text spellchecking function using all chosen dictionaries.
     """
-    def __init__(self, libparser: str, path: str = '', language: str ='', log: object = None):
+    def __init__(self, libparser: str, path: str = '', log: object = None):
         self.hunspell_instances = {}
         self.parser = Parser(libparser)
         self.log = log
+        self.path = path
 
-        if path is not '':
-            self.add_dictionary(path, language)
-
-    def add_dictionary(self, path: str, language: str) -> None:
+    def add_dictionary(self, language: str) -> None:
         """
         Create new hunspell instance and put into instances dictionary.
 
-        :param path: Path to .dic and .aff files.
         :param language: Language that corresponds .dic and .aff files.
         """
         if language in self.hunspell_instances:
             return
 
-        dictionary = "{}/{}.dic".format(path, language)
+        dictionary = "{}/{}.dic".format(self.path, language)
         if not os.path.isfile(dictionary):
             if self.log:
                 self.log.write("File not found: {}".format(dictionary))
             return
-        affix = "{}/{}.aff".format(path, language)
+        affix = "{}/{}.aff".format(self.path, language)
         if not os.path.isfile(affix):
             if self.log:
                 self.log.write("File not found: {}".format(affix))
@@ -51,13 +48,17 @@ class Spellchecker:
         :param languages: Languages list.
         :return: Suggestions message (dictionary-like) for misspelled words.
         """
-        suggestions_map = Suggestions()
-        hunspells = (self.hunspell_instances[lang] for lang in languages if lang in self.hunspell_instances)
-        tokens = self.parser.tokenize(text)
+        for lang in languages:
+            if lang not in self.hunspell_instances:
+                self.add_dictionary(lang)
 
-        for h in hunspells:
+        dictionaries = (self.hunspell_instances[lang] for lang in languages if lang in self.hunspell_instances)
+        tokens = self.parser.tokenize(text)
+        suggestions_map = Suggestions()
+
+        for dictionary in dictionaries:
             for token in tokens:
-                if not h.spell(token):
-                    suggestions_map.suggestions[token].values.extend(h.suggest(token))
+                if not dictionary.spell(token):
+                    suggestions_map.suggestions[token].values.extend(dictionary.suggest(token))
 
         return suggestions_map
