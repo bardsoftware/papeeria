@@ -16,8 +16,8 @@ class SpellcheckerServicer(spellchecker_pb2.SpellcheckServicer):
     """
     gRPC service to check text that comes from clients.
     """
-    def __init__(self, libparser, dict_path, language):
-        self.checker = Spellchecker(libparser, dict_path, language)
+    def __init__(self, libparser, dict_path):
+        self.checker = Spellchecker(libparser, dict_path)
 
     def CheckText(self, request, context):
         """
@@ -34,7 +34,7 @@ class SpellcheckerServicer(spellchecker_pb2.SpellcheckServicer):
         return self.checker.check_text(text, languages)
 
 
-def serve(port: str, max_workers: int, libparser: str, dict_path: str, language: str):
+def serve(port: str, max_workers: int, libparser: str, dict_path: str):
     """
     Initialize and run the gRPC server.
 
@@ -42,14 +42,13 @@ def serve(port: str, max_workers: int, libparser: str, dict_path: str, language:
     :param max_workers: Size of thread pool to serve clients.
     :param libparser: Path to C parser shared library.
     :param dict_path: Path to .dic and .aff files
-    :param language: Language to add to spellchecker.
     """
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=max_workers)
     )
 
     spellchecker_pb2.add_SpellcheckServicer_to_server(
-        SpellcheckerServicer(libparser, dict_path, language),
+        SpellcheckerServicer(libparser, dict_path),
         server
     )
 
@@ -90,13 +89,7 @@ if __name__ == "__main__":
                           type=str,
                           metavar="PATH",
                           help="path to .dic and .aff files")
-    required.add_argument("-L", "--language",
-                          required=True,
-                          action="store",
-                          type=str,
-                          metavar="LANG",
-                          help="dictionary language")
 
     args = args_parser.parse_args()
 
-    serve(args.port, args.workers, args.libparser, args.dir, args.language)
+    serve(args.port, args.workers, args.libparser, args.dir)
