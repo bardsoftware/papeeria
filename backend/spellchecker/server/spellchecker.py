@@ -2,7 +2,6 @@
 import os.path
 
 import hunspell
-import ujson
 from spellchecker_pb2 import Suggestions
 
 from parser import Parser
