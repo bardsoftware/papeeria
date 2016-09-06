@@ -6,31 +6,34 @@ parser.add_argument('--file', help='filepath to input aux')
 args = parser.parse_args()
 
 f = open(args.file, 'r')
-s = '\\newlabel'
+PREFIX = '\\newlabel'
 
 listOfLabels = []
 
 def getArg(s, i):
-    end = s[i+1:].find("}")
-    return s[i+1:end + i + 1], end + i + 2
+    end = s.find("}", i + 1)
+    if end == -1:
+        return None, len(s)
+    return s[i + 1: end], end + 1
 
 for line in f:
-    if line.startswith(s):
-        line = line.replace(s, '')
-        caption, ind = getArg(line, 0)
-        ind += 1
+    if line.startswith(PREFIX):
+        line = line.replace(PREFIX, '')
         args = []
-        while (line[ind] == '{'):
-           a, ind = getArg(line, ind)
-           args.append(a)
-        print(args)
-        node = {}
+        ind = 0
+        while ind < len(line):
+            if line[ind] == '{' and line[ind+1] == '{':
+                ind += 1
+            arg, ind = getArg(line, ind)
+            if arg != None:
+                args.append(arg)
 
-        if len(args) == 5:
-            node['type'] = args[3].split('.')[0]
+        node = {}
+        if len(args) == 6:
+            node['type'] = args[4].split('.')[0]
         else:
             node['type'] = "references"
-        node['caption'] = caption
+        node['caption'] = args[0]
         listOfLabels.append(node)
 
 print(json.dumps(listOfLabels))
