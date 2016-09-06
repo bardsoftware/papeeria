@@ -10,13 +10,27 @@ s = '\\newlabel'
 
 listOfLabels = []
 
+def getArg(s, i):
+    end = s[i+1:].find("}")
+    return s[i+1:end + i + 1], end + i + 2
+
 for line in f:
     if line.startswith(s):
-        line = line.replace('}', '')
-        line = line.split('{')
+        line = line.replace(s, '')
+        caption, ind = getArg(line, 0)
+        ind += 1
+        args = []
+        while (line[ind] == '{'):
+           a, ind = getArg(line, ind)
+           args.append(a)
+        print(args)
         node = {}
-        node['type'] = line[6].split('.')[0]
-        node['caption'] = line[1]
+
+        if len(args) == 5:
+            node['type'] = args[3].split('.')[0]
+        else:
+            node['type'] = "references"
+        node['caption'] = caption
         listOfLabels.append(node)
 
-print(json.dumps(listOfLabels))    
+print(json.dumps(listOfLabels))
