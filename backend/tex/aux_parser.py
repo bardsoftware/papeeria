@@ -19,7 +19,4 @@ for line in f:
         node['caption'] = line[1]
         listOfLabels.append(node)
 
-data = {}
-data['Labels'] = listOfLabels
-
-print(json.dumps(data))    
+print(json.dumps(listOfLabels))    
