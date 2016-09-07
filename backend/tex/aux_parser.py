@@ -10,23 +10,28 @@ PREFIX = '\\newlabel'
 
 listOfLabels = []
 
-def getArg(s, i):
+def parseArg(s, i):
     end = s.find("}", i + 1)
     if end == -1:
         return None, len(s)
     return s[i + 1: end], end + 1
 
-for line in f:
-    if line.startswith(PREFIX):
-        line = line.replace(PREFIX, '')
-        args = []
-        ind = 0
-        while ind < len(line):
-            if line[ind] == '{' and line[ind+1] == '{':
+def parseLabel(s, prefix = PREFIX):
+    s = s.replace(prefix, '')
+
+    ind = 0
+    args = []
+    while ind < len(s):
+            if s[ind] == '{' and s[ind+1] == '{':
                 ind += 1
-            arg, ind = getArg(line, ind)
+            arg, ind = parseArg(s, ind)
             if arg != None:
                 args.append(arg)
+    return args
+
+for line in f:
+    if line.startswith(PREFIX):
+        args = parseLabel(line)
 
         node = {}
         if len(args) == 6:
