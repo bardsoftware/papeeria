@@ -11,7 +11,7 @@ PREFIX = '\\newlabel'
 listOfLabels = []
 
 def parseArg(s, i):
-    end = s.find("}", i + 1)
+    end = s.find('}', i + 1)
     if end == -1:
         return None, len(s)
     return s[i + 1: end], end + 1
@@ -25,7 +25,7 @@ def parseLabel(s, prefix = PREFIX):
             if s[ind] == '{' and s[ind+1] == '{':
                 ind += 1
             arg, ind = parseArg(s, ind)
-            if arg != None:
+            if arg is not None:
                 args.append(arg)
     return args
 
@@ -37,7 +37,7 @@ for line in f:
         if len(args) == 6:
             node['type'] = args[4].split('.')[0]
         else:
-            node['type'] = "references"
+            node['type'] = 'references'
         node['caption'] = args[0]
         listOfLabels.append(node)
 
