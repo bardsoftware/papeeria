@@ -8,14 +8,7 @@
 @menu_bg_color: transparent;
 @menu_border_left_color: #b94a48;
 
-
-
-
 .img-thumbnail {
-    /*height: 50%;*/
-    /*width:@width*60%;
-    height:@width*60%*1.39;*/
-    /*width:60%;*/
     height: 230px;
 }
 
@@ -33,7 +26,6 @@
     padding-top: 15px;
     padding-bottom: 15px;
     padding-left: 5px;
-
     &:hover {
         .open-template {
             opacity: 1;
@@ -60,7 +52,6 @@ a {
     top: 0;
     bottom: 0;
     opacity: 0;
-
     &:hover {
         cursor: pointer;
     }
@@ -74,14 +65,11 @@ a {
     top: 40%;
     left: 10%;
     right: 10%;
-    /*margin: 60% 10% 50% 10%;*/
     color: white;
-
     &:hover {
         background-color: @open_button_bg_color_dark;
         transition: .1s ease;
     }
-
     &:active {
         background-color: @open_button_bg_color_dark;
         cursor: pointer;
@@ -95,7 +83,6 @@ a {
     text-align: center;
     color: @load_more_color;
     padding: 5px 0;
-
     &:hover {
         background-color: @load_more_bg_color;
     }
@@ -107,7 +94,6 @@ a {
     flex-wrap: wrap;
 }
 
-
 .active_link {
     color: @menu_link_active_color;
     text-decoration: none;
@@ -115,16 +101,8 @@ a {
     border-left-color: @menu_border_left_color;
 }
 
-
 .bs-docs-sidebar {
     padding-left: 20px;
-    /*margin-top: 20px;
-	margin-bottom: 20px;*/
-    .affix {
-        position: fixed;
-        top: 20px;
-    }
-
     .nav {
         > li {
             > a {
@@ -132,70 +110,32 @@ a {
                 border-left: 2px solid transparent;
                 padding: 4px 20px;
                 font-size: 14px;
-                font-weight: 400;
-
                 &:hover {
-                    .active_link;
-                }
-
-                &:focus {
                     .active_link;
                 }
             }
         }
-
         .nav {
             > li {
                 > a {
-                    padding-top: 1px;
-                    padding-bottom: 1px;
-                    padding-left: 30px;
-                    font-size: 13px;
-                }
-            }
-
-            > .active {
-                > a {
-                    font-weight: 500;
-                }
-
-                &:hover {
-                    > a {
-                        font-weight: 500;
-                    }
-                }
-
-                &:focus {
-                    > a {
-                        font-weight: 500;
+                    padding-left: 50px;
+                    font-size: 12px;
+                    &:hover:not(.active) {
+                        .active_link;
+                        border-left: 1px solid;
+                        padding-left: 51px;
                     }
                 }
             }
         }
-
         > .active {
             > a {
                 .active_link;
-                font-weight: 700;
             }
-
-            &:hover {
-                > a {
-                    font-weight: 700;
-                }
-            }
-
-            &:focus {
-                > a {
-                    font-weight: 700;
-                }
-            }
-
             > ul.nav {
                 display: block;
             }
         }
-
         ul.nav {
             display: none;
         }
