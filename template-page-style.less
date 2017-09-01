@@ -10,6 +10,9 @@
 
 .img-thumbnail {
     height: 230px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .region-caption {
@@ -25,7 +28,6 @@
 .template-item {
     padding-top: 15px;
     padding-bottom: 15px;
-    padding-left: 5px;
     &:hover {
         .open-template {
             opacity: 1;
@@ -35,6 +37,16 @@
     }
 }
 
+.caption{
+    text-align: center;
+    padding-left:15px;
+    padding-right:15px;
+}
+
+.description{
+    padding-left:15px;
+    padding-right:15px;
+}
 a {
     &:link {
         text-decoration: none;
@@ -47,8 +59,8 @@ a {
 
 .open-template {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 15px;
+    right: 15px;
     top: 0;
     bottom: 0;
     opacity: 0;
