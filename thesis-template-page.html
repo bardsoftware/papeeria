@@ -11,9 +11,12 @@
     <script src="menu.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-xs-9 col-sm-9 col-md-10" role="main">
+      <div class="container-fluid">
+        <div class="row row-offcanvas ">
+            <div class="col-xs-9 col-sm-9 col-md-10">
+                <button type="button" class="pull-right btn btn-default visible-xs affix toggle-menu-btn" data-toggle="offcanvas">
+                    <i class="fa fa-navicon"></i>
+                </button>
                 <h1 id="thesis">Thesis Templates</h1>
                 <p> These thesis templates, many provided by the university themselves as official layout guidelines, include sections for you to add all the relevant author information (your university, department, supervisor, year, etc) along with placeholder chapters for your introduction, background, method, results, conclusion / discussion, references and appendices.</p>
                 <h4 class="region-caption" id="thesis-generic">Generic Thesis Templates</h4>
@@ -588,8 +591,8 @@
                     </a>
                 </div>
             </div>
-            <div class="col-xs-3 col-sm-3 col-md-2" role="complementary">
-                <nav class="bs-docs-sidebar hidden-print affix">
+            <div class="col-xs-3 col-sm-3 col-md-2 sidebar-offcanvas">
+                <nav class="bs-docs-sidebar hidden-print  affix">
                     <ul id="sidebar" class="nav nav-stacked">
                         <li>
                             <a href="#thesis">Thesis Templates</a>
