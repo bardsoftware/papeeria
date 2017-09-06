@@ -5,4 +5,7 @@ $(document).ready(function(){
         $(this).parents('li').addClass('active');
         $(this).addClass('active');
     });
+    $('[data-toggle="offcanvas"]').click(function () {
+        $('.row-offcanvas').toggleClass('active')
+    });
 });
