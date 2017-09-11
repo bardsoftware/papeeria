@@ -156,30 +156,26 @@ a {
 @media screen and (max-width: 767px) {
     .bs-docs-sidebar{
         background-color:#eee;
-        right:0;
-    }
-	.row-offcanvas {
-		position: relative;
-		-webkit-transition: all .25s ease-out;
-		-o-transition: all .25s ease-out;
-		transition: all .25s ease-out;
+        right:-210px;
+        top:0;
+        bottom:0;
+        z-index: 1;
+        width:210px;
+        padding-top:40px;
         
-	}
+    }
 	.sidebar-offcanvas {
 		position: absolute;
-		display: none;
-        margin-top:40px;
-        width:50%;
-        
+		display: none;       
 	}
-	.row-offcanvas.active {
-		.sidebar-offcanvas {
+		.sidebar-offcanvas.active {
 			display: block;
 			right: 0;
-			z-index: 1;          
-		}
-	}
+			z-index: 1; 
+		}	
 }
+
 .toggle-menu-btn{
     right:1%;
+    z-index:2;
 }
