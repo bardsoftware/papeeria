@@ -6,6 +6,13 @@ $(document).ready(function(){
         $(this).addClass('active');
     });
     $('[data-toggle="offcanvas"]').click(function () {
-        $('.row-offcanvas').toggleClass('active')
+        
+        $('.sidebar-offcanvas').toggleClass('active');
+        if ($('.sidebar-offcanvas').hasClass('active')) {
+            $('.bs-docs-sidebar').animate({ right: '0' });
+        }
+        else {
+            $('.bs-docs-sidebar').css("right", "-210px");
+        }
     });
 });
