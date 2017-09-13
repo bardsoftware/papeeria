@@ -6,13 +6,26 @@ $(document).ready(function(){
         $(this).addClass('active');
     });
     $('[data-toggle="offcanvas"]').click(function () {
-        
-        $('.sidebar-offcanvas').toggleClass('active');
+
         if ($('.sidebar-offcanvas').hasClass('active')) {
-            $('.bs-docs-sidebar').animate({ right: '0' });
+            $('.bs-docs-sidebar').animate({ right: '-210px' });
+            setTimeout(function () {
+                $('.sidebar-offcanvas').removeClass('active');
+            }, 300);          
         }
         else {
-            $('.bs-docs-sidebar').css("right", "-210px");
+            $('.bs-docs-sidebar').animate({ right: '0' });
+            $('.sidebar-offcanvas').addClass('active');         
+        }
+    });
+    $(window).resize(function () {
+        if($(window).width()>751){
+            $('.bs-docs-sidebar').css('right', '0');
+            $('.sidebar-offcanvas').addClass('active');
+        }
+        else{
+            $('.sidebar-offcanvas').removeClass('active');
+            $('.bs-docs-sidebar').css( 'right', '-210px' );
         }
     });
 });
